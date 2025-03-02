@@ -13,9 +13,12 @@ creds_dict = dict(st.secrets["gcp_service_account"])  # ✅ Create a mutable cop
 # Fix private key formatting
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
-# Authenticate Google Sheets API
+# ✅ Fix: Ensure correct Google API scopes
 try:
-    creds = Credentials.from_service_account_info(creds_dict)
+    creds = Credentials.from_service_account_info(
+        creds_dict, 
+        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    )
     client = gspread.authorize(creds)
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 except Exception as e:
