@@ -7,12 +7,20 @@ import pandas as pd
 SHEET_ID = "1NTwh2GsadyZFEiSMpjSgDX5EjMTPpZUJ0BVfVWOVClw"
 SHEET_NAME = "Data"
 
-# Load credentials from JSON file (replace 'your-credentials.json' with actual file path)
-#creds = Credentials.from_service_account_file("vayuvolt-3ffcb7a5f2ee.json", scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"])
+# Load credentials from Streamlit Secrets
 creds_dict = st.secrets["gcp_service_account"]
-creds = Credentials.from_service_account_info(dict(creds_dict))
-client = gspread.authorize(creds)
-sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+
+# Fix private key formatting
+creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
+# Authenticate Google Sheets API
+try:
+    creds = Credentials.from_service_account_info(dict(creds_dict))
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+except Exception as e:
+    st.error(f"❌ Failed to connect to Google Sheets: {e}")
+    st.stop()
 
 # Streamlit UI
 st.title("📋 Google Sheet Form & Viewer")
@@ -21,25 +29,31 @@ st.title("📋 Google Sheet Form & Viewer")
 st.header("➕ Add New Entry")
 
 with st.form(key="entry_form"):
-    date = st.date_input("Select Date")
-    item = st.text_input("Enter Item (Category)")
-    rate = st.number_input("Rate (Per KG)", min_value=0.0, format="%.2f")
-    quantity = st.number_input("Quantity", min_value=0.0, format="%.2f")
+    date = st.date_input("📅 Select Date")
+    item = st.text_input("📦 Enter Item (Category)")
+    rate = st.number_input("💲 Rate (Per KG)", min_value=0.0, format="%.2f")
+    quantity = st.number_input("📏 Quantity (KG)", min_value=0.0, format="%.2f")
     
-    submit_button = st.form_submit_button(label="Submit")
+    submit_button = st.form_submit_button(label="✅ Submit")
 
     if submit_button:
-        new_row = [str(pd.Timestamp.now()), str(date), item, rate, quantity]
-        sheet.append_row(new_row)
-        st.success("✅ Data added successfully!")
+        try:
+            new_row = [str(pd.Timestamp.now()), str(date), item, rate, quantity]
+            sheet.append_row(new_row)
+            st.success("✅ Data added successfully!")
+        except Exception as e:
+            st.error(f"❌ Failed to add data: {e}")
 
 # Display Google Sheet Data
 st.header("📊 View Submitted Data")
 
-data = sheet.get_all_records()
-df = pd.DataFrame(data)
+try:
+    data = sheet.get_all_records()
+    df = pd.DataFrame(data)
 
-if not df.empty:
-    st.dataframe(df)
-else:
-    st.warning("No data found!")
+    if not df.empty:
+        st.dataframe(df)
+    else:
+        st.warning("⚠ No data found!")
+except Exception as e:
+    st.error(f"❌ Failed to fetch data: {e}")
