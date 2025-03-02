@@ -1,120 +1,62 @@
 import streamlit as st
-import pandas as pd
-import bcrypt
 import gspread
 from google.oauth2.service_account import Credentials
-
-# Streamlit App Configuration
-st.set_page_config(page_title="Google Sheets Dashboard", layout="wide")
+import pandas as pd
 
 # Google Sheets Authentication
-SHEET_IDS = {
-    "auth": "1RCIZrxv21hY-xtzDRuC0L50KLCLpZuYWKKatuJoVCT8",
-    "collection": "1l0RVkf3U0XvWJre74qHy3Nv5n-4TKTCSV5yNVW4Sdbw",
-    "expense": "1bEquqG2T-obXkw5lWwukx1v_lFnLrFdAf6GlWHZ9J18"
-}
-SHEET_NAMES = {
-    "auth": "Sheet1",
-    "collection": "Form responses 1",
-    "expense": "Form responses 1"
-}
+SHEET_ID = "1NTwh2GsadyZFEiSMpjSgDX5EjMTPpZUJ0BVfVWOVClw"
+SHEET_NAME = "Data"
 
-# Load credentials from Streamlit Secrets
-creds_dict = dict(st.secrets["gcp_service_account"])
+# Load credentials from Streamlit Secrets (create a copy)
+creds_dict = dict(st.secrets["gcp_service_account"])  # ✅ Create a mutable copy
+
+# Fix private key formatting
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-creds = Credentials.from_service_account_info(
-    creds_dict,
-    scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-)
-client = gspread.authorize(creds)
 
-def load_sheet_data(sheet_id, sheet_name):
-    sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
-    return pd.DataFrame(sheet.get_all_records())
+# ✅ Fix: Ensure correct Google API scopes
+try:
+    creds = Credentials.from_service_account_info(
+        creds_dict, 
+        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    )
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+except Exception as e:
+    st.error(f"❌ Failed to connect to Google Sheets: {e}")
+    st.stop()
 
-# Authentication Data
-auth_df = load_sheet_data(SHEET_IDS["auth"], SHEET_NAMES["auth"])
+# Streamlit UI
+st.title("📋 Google Sheet Form & Viewer")
 
-def verify_password(stored_hash, entered_password):
-    return bcrypt.checkpw(entered_password.encode(), stored_hash.encode())
+# Form to add new data
+st.header("➕ Add New Entry")
 
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-    st.session_state.user_role = None
-    st.session_state.username = None
-    st.session_state.user_name = None
-
-if not st.session_state.authenticated:
-    st.title("🔒 Secure Login")
-    username = st.text_input("👤 Username")
-    password = st.text_input("🔑 Password", type="password")
-    login_button = st.button("Login")
-
-    if login_button:
-        user_data = auth_df[auth_df["Username"] == username]
-        if not user_data.empty:
-            stored_hash = user_data.iloc[0]["Password"]
-            role = user_data.iloc[0]["Role"]
-            name = user_data.iloc[0]["Name"]
-
-            if verify_password(stored_hash, password):
-                st.session_state.authenticated = True
-                st.session_state.user_role = role
-                st.session_state.username = username
-                st.session_state.user_name = name
-                st.success(f"✅ Welcome, {name}!")
-                st.rerun()
-            else:
-                st.error("❌ Invalid Credentials")
-        else:
-            st.error("❌ User not found")
-else:
-    if st.sidebar.button("🚪 Logout"):
-        st.session_state.authenticated = False
-        st.session_state.user_role = None
-        st.session_state.username = None
-        st.session_state.user_name = None
-        st.rerun()
+with st.form(key="entry_form"):
+    date = st.date_input("📅 Select Date")
+    item = st.text_input("📦 Enter Item (Category)")
+    rate = st.number_input("💲 Rate (Per KG)", min_value=0.0, format="%.2f")
+    quantity = st.number_input("📏 Quantity (KG)", min_value=0.0, format="%.2f")
     
-    st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
-    df = load_sheet_data(SHEET_IDS["collection"], SHEET_NAMES["collection"])
-    expense_df = load_sheet_data(SHEET_IDS["expense"], SHEET_NAMES["expense"])
-    
-    st.sidebar.header("📂 Navigation")
-    page = st.sidebar.radio("Go to:", ["Dashboard", "Monthly Summary", "Grouped Data", "Expenses", "Raw Data"])
+    submit_button = st.form_submit_button(label="✅ Submit")
 
-    if page == "Dashboard":
-        st.title("📊 Orga Yatra Dashboard")
-        total_collection = df['Amount'].sum()
-        total_expense = expense_df['Amount Used'].sum()
-        remaining_amount = total_collection - total_expense
+    if submit_button:
+        try:
+            new_row = [str(pd.Timestamp.now()), str(date), item, rate, quantity]
+            sheet.append_row(new_row)
+            st.success("✅ Data added successfully!")
+        except Exception as e:
+            st.error(f"❌ Failed to add data: {e}")
 
-        last_month = df['Month-Year'].max()
-        last_month_collection = df[df['Month-Year'] == last_month]['Amount'].sum()
-        last_month_expense = expense_df[expense_df['Month-Year'] == last_month]['Amount Used'].sum()
+# Display Google Sheet Data
+st.header("📊 View Submitted Data")
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric(label="💰 Total Collection", value=f"₹{total_collection:,.2f}")
-        col2.metric(label="📉 Total Expenses", value=f"₹{total_expense:,.2f}")
-        col3.metric(label="💵 Remaining Balance", value=f"₹{remaining_amount:,.2f}")
-        
-        formatted_last_month = pd.to_datetime(last_month).strftime("%b %Y")  
-        st.subheader("📅 " + formatted_last_month + " Overview")
-        
-        col4, col5 = st.columns(2)
-        col4.metric(label="📈 " + formatted_last_month + " Collection", value=f"₹{last_month_collection:,.2f}")
-        col5.metric(label="📉 " + formatted_last_month + " Expenses", value=f"₹{last_month_expense:,.2f}")
-        
-        st.write("### 📈 Collection & Distance Trend")
-        st.line_chart(df.set_index("Collection Date")[["Amount", "Distance"]])
-        
-        st.write("### 🔍 Recent Collection Data:")
-        st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
+try:
+    data = sheet.get_all_records()
+    df = pd.DataFrame(data)
 
-    elif page == "Expenses":
-        st.title("💸 Expense Details")
-        st.dataframe(expense_df.sort_values(by="Date", ascending=False))
-    
-    elif page == "Raw Data":
-        st.title("📋 Full Collection Data")
-        st.dataframe(df.sort_values(by="Collection Date", ascending=False))
+    if not df.empty:
+        st.dataframe(df)
+    else:
+        st.warning("⚠ No data found!")
+except Exception as e:
+    st.error(f"❌ Failed to fetch data: {e}")
