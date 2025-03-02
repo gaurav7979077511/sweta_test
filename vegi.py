@@ -7,15 +7,15 @@ import pandas as pd
 SHEET_ID = "1NTwh2GsadyZFEiSMpjSgDX5EjMTPpZUJ0BVfVWOVClw"
 SHEET_NAME = "Data"
 
-# Load credentials from Streamlit Secrets
-creds_dict = st.secrets["gcp_service_account"]
+# Load credentials from Streamlit Secrets (create a copy)
+creds_dict = dict(st.secrets["gcp_service_account"])  # ✅ Create a mutable copy
 
 # Fix private key formatting
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
 # Authenticate Google Sheets API
 try:
-    creds = Credentials.from_service_account_info(dict(creds_dict))
+    creds = Credentials.from_service_account_info(creds_dict)
     client = gspread.authorize(creds)
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 except Exception as e:
