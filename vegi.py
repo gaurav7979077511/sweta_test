@@ -28,7 +28,7 @@ COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_
 
 # --- EXPENSE DATA ---
 
-EXPENSE_SHEET_NAME = "Form%20responses%201"
+EXPENSE_SHEET_NAME = "expense"
 EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={EXPENSE_SHEET_NAME}"
 
 # --- INVESTMENT DATA ---
