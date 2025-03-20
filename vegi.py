@@ -25,7 +25,7 @@ AUTH_SHEET_NAME = "Sheet1"
 
 # --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "collection"
-COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
+#COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
@@ -131,8 +131,10 @@ else:
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def load_data(url):
-        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
+    def load_data(sheet):
+        data = sheet.get_all_records()
+        df = pd.DataFrame(data)
+        #df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
         
         df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
@@ -187,7 +189,7 @@ else:
     
 
 
-    df = load_data(COLLECTION_CSV_URL)
+    df = load_data(COLLECTION_sheet)
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
