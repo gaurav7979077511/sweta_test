@@ -50,9 +50,9 @@ try:
     )
     client = gspread.authorize(creds)
     AUTH_sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
-    COLLECTION_sheet = client.open_by_key(COLLECTION_SHEET_ID).worksheet(COLLECTION_SHEET_NAME)
-    EXPENSE_sheet = client.open_by_key(EXPENSE_SHEET_ID).worksheet(EXPENSE_SHEET_NAME)
-    INVESTMENT_sheet = client.open_by_key(INVESTMENT_SHEET_ID).worksheet(INVESTMENT_SHEET_NAME)
+    #COLLECTION_sheet = client.open_by_key(COLLECTION_SHEET_ID).worksheet(COLLECTION_SHEET_NAME)
+    #EXPENSE_sheet = client.open_by_key(EXPENSE_SHEET_ID).worksheet(EXPENSE_SHEET_NAME)
+    #INVESTMENT_sheet = client.open_by_key(INVESTMENT_SHEET_ID).worksheet(INVESTMENT_SHEET_NAME)
 except Exception as e:
     st.error(f"❌ Failed to connect to Google Sheets: {e}")
     st.stop()
