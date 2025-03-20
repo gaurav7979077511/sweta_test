@@ -37,27 +37,36 @@ EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gv
 INVESTMENT_SHEET_NAME = "Investment_Details"
 INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={INVESTMENT_SHEET_NAME}"
 
-# Load credentials from Streamlit Secrets (create a copy)
-creds_dict = dict(st.secrets["gcp_service_account"])  # ✅ Create a mutable copy
+# ✅ Load credentials from Streamlit Secrets (Create a Copy)
+creds_dict = dict(st.secrets["gcp_service_account"])  # Create a mutable copy
 
-# Fix private key formatting
+# ✅ Fix private key formatting
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
-# ✅ Fix: Ensure correct Google API scopes
-try:
-    creds = Credentials.from_service_account_info(
-        creds_dict, 
-        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    )
-    client = gspread.authorize(creds)
-    AUTH_sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
-    COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
-    EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
-    INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
-except Exception as e:
-    st.error(f"❌ Failed to connect to Google Sheets: {e}")
-    st.stop()
+# ✅ Function to Connect to Google Sheets (with Caching)
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def connect_to_sheets():
+    try:
+        creds = Credentials.from_service_account_info(
+            creds_dict, 
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        )
+        client = gspread.authorize(creds)
+        
+        # Open sheets once and reuse them
+        AUTH_sheet = client.open_by_key(st.secrets["sheets"]["AUTH_SHEET_ID"]).worksheet(st.secrets["sheets"]["AUTH_SHEET_NAME"])
+        COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(st.secrets["sheets"]["COLLECTION_SHEET_NAME"])
+        EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(st.secrets["sheets"]["EXPENSE_SHEET_NAME"])
+        INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(st.secrets["sheets"]["INVESTMENT_SHEET_NAME"])
+        
+        return AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet
 
+    except Exception as e:
+        st.error(f"❌ Failed to connect to Google Sheets: {e}")
+        st.stop()
+
+# ✅ Get cached sheets
+AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet = connect_to_sheets()
 
 # Function to load authentication data securely
 @st.cache_data(ttl=300)  # Cache for 5 minutes
