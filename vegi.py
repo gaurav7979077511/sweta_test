@@ -189,7 +189,7 @@ else:
     
 
 
-    df = load_data(COLLECTION_CSV_URL)
+    df = load_data()
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
