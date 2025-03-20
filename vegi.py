@@ -10,8 +10,9 @@ from google.oauth2.service_account import Credentials
 st.set_page_config(page_title="Google Sheets Dashboard", layout="wide")
 
 # Load credentials from Streamlit secrets
-credentials = Credentials.from_service_account_info(st.secrets["gcp_service_account"])
-client = gspread.authorize(credentials)
+def get_gspread_client():
+    credentials = Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+    return gspread.authorize(credentials)
 
 
 # Load Google Sheet IDs securely
@@ -42,10 +43,9 @@ INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_
 
 # Function to load authentication data securely
 def load_auth_data():
-    sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
-    data = sheet.get_all_values()
-    df = pd.DataFrame(data[1:], columns=data[0])  # Convert to DataFrame
-    return df
+    client = get_gspread_client()
+    sheet = client.open_by_key(st.secrets["sheets"]["AUTH_SHEET_ID"]).worksheet("Sheet1")
+    return sheet.get_all_records()
 
 # Load authentication data
 auth_df = load_auth_data()
