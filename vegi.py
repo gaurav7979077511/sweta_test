@@ -35,7 +35,7 @@ EXPENSE_SHEET_NAME = "expense"
 # --- INVESTMENT DATA ---
 
 INVESTMENT_SHEET_NAME = "Investment_Details"
-#INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={INVESTMENT_SHEET_NAME}"
+INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={INVESTMENT_SHEET_NAME}"
 
 # ✅ Load credentials from Streamlit Secrets (Create a Copy)
 creds_dict = dict(st.secrets["gcp_service_account"])  # Create a mutable copy
@@ -214,34 +214,10 @@ else:
         df['Amount Used'] = pd.to_numeric(df['Amount Used'], errors='coerce')
         df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
         return df[['Date', 'Vehicle No', 'Reason of Expense', 'Amount Used', 'Any Bill', 'Month-Year']]
-
     
-    # ✅ Function to Connect to Google Sheets (with Caching)
-    @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def connect_to_investment_sheets():
-        try:
-            creds = Credentials.from_service_account_info(
-                creds_dict, 
-                scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-            )
-            client = gspread.authorize(creds)
-            
-            # Open sheets once and reuse them
-            INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
-            
-            return INVESTMENT_sheet
-
-        except Exception as e:
-            st.error(f"❌ Failed to connect to Google Sheets: {e}")
-            st.stop()
-
-    # ✅ Get cached sheets
-    INVESTMENT_sheet = connect_to_investment_sheets()
-
     @st.cache_data(ttl=300)  # Cache for 5 minutes    
-    def load_investment_data():
-        data = INVESTMENT_sheet.get_all_records()  # Fetch data from private sheet
-        df = pd.DataFrame(data)
+    def load_investment_data(url):
+        df = pd.read_csv(url, dayfirst=True)
 
         # Strip spaces from column names to avoid formatting issues
         df.columns = df.columns.str.strip()
@@ -267,7 +243,7 @@ else:
 
     df = load_collection_data()
     expense_df = load_expense_data()
-    investment_df = load_investment_data()
+    investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
 
     # --- DASHBOARD UI ---
