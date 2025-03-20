@@ -67,6 +67,7 @@ def connect_to_sheets():
 
 # ✅ Get cached sheets
 AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet = connect_to_sheets()
+COLLECTION_Data=COLLECTION_sheet.get_all_records()
 
 # Function to load authentication data securely
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -131,8 +132,7 @@ else:
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def load_data(sheet):
-        data = sheet.get_all_records()
+    def load_data(data):
         df = pd.DataFrame(data)
         #df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
         
@@ -189,7 +189,7 @@ else:
     
 
 
-    df = load_data(COLLECTION_sheet)
+    df = load_data(COLLECTION_Data)
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
