@@ -131,8 +131,9 @@ else:
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def load_data(url):
-        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
+    def load_data():
+        data = COLLECTION_sheet.get_all_records()
+        df = pd.DataFrame(data)
         
         df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
@@ -187,7 +188,7 @@ else:
     
 
 
-    df = load_data(COLLECTION_CSV_URL)
+    df = load_data()
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
