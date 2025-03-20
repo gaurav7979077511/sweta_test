@@ -25,6 +25,7 @@ AUTH_SHEET_NAME = "Sheet1"
 
 # --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "collection"
+COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
@@ -50,10 +51,15 @@ try:
     )
     client = gspread.authorize(creds)
     AUTH_sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
-    COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
 except Exception as e:
     st.error(f"❌ Failed to connect to Google Sheets: {e}")
     st.stop()
+
+try:
+    COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
+    st.success("✅ Connected to Collection Sheet!")
+except Exception as e:
+    st.error(f"❌ Failed to connect to Collection Sheet: {e}")
 
 try:
     EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
@@ -133,8 +139,7 @@ else:
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
     def load_data(url):
-        data = COLLECTION_sheet.get_all_records()
-        df = pd.DataFrame(data)
+        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
         
         df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
@@ -189,7 +194,7 @@ else:
     
 
 
-    df = load_data()
+    df = load_data(COLLECTION_CSV_URL)
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
