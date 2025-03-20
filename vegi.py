@@ -25,7 +25,7 @@ AUTH_SHEET_NAME = "Sheet1"
 
 # --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "collection"
-COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
+#COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
@@ -129,6 +129,32 @@ else:
         st.rerun()
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
+
+
+    # ✅ Function to Connect to Google Sheets (with Caching)
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    def connect_to_sheets_():
+        try:
+            creds = Credentials.from_service_account_info(
+                creds_dict, 
+                scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+            )
+            client = gspread.authorize(creds)
+            
+            # Open sheets once and reuse them
+            #AUTH_sheet = client.open_by_key(st.secrets["sheets"]["AUTH_SHEET_ID"]).worksheet(AUTH_SHEET_NAME)
+            COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
+            EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
+            INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
+            
+            return COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet
+
+        except Exception as e:
+            st.error(f"❌ Failed to connect to Google Sheets: {e}")
+            st.stop()
+
+    # ✅ Get cached sheets
+    COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet = connect_to_sheets_()
 
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
