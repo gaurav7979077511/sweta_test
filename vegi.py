@@ -23,7 +23,7 @@ AUTH_SHEET_NAME = "Sheet1"
 
 
 # --- DATA LOADING ---
-COLLECTION_SHEET_NAME = "Form%20responses%201"
+COLLECTION_SHEET_NAME = "collection"
 COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
