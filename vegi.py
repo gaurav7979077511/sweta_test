@@ -25,7 +25,7 @@ AUTH_SHEET_NAME = "Sheet1"
 
 # --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "collection"
-#COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
+COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
@@ -67,7 +67,6 @@ def connect_to_sheets():
 
 # ✅ Get cached sheets
 AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet = connect_to_sheets()
-COLLECTION_Data=COLLECTION_sheet.get_all_records()
 
 # Function to load authentication data securely
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -131,26 +130,30 @@ else:
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
+
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def load_data(data):
-        df = pd.DataFrame(data)
-        #df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
-        
-        df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
-        df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
-        df['Meter Reading'] = pd.to_numeric(df['Meter Reading'], errors='coerce')
+    def load_collection_data():
+        try:
+            data = COLLECTION_sheet.get_all_records()  # Fetch data from private sheet
+            df = pd.DataFrame(data)
 
-        # Calculate Distance
-        df['Distance'] = df['Meter Reading'].diff().fillna(0)
+            # Convert Date columns
+            df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
+            df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
+            df['Meter Reading'] = pd.to_numeric(df['Meter Reading'], errors='coerce')
 
-        # Replace negative distances with the average of positive distances
-        positive_avg_distance = df[df['Distance'] > 0]['Distance'].mean()
-        df.loc[df['Distance'] < 0, 'Distance'] = np.round(positive_avg_distance)
+            # Calculate Distance
+            df['Distance'] = df['Meter Reading'].diff().fillna(0)
+            positive_avg_distance = df[df['Distance'] > 0]['Distance'].mean()
+            df.loc[df['Distance'] < 0, 'Distance'] = np.round(positive_avg_distance)
 
-        # Month-Year Column
-        df['Month-Year'] = pd.to_datetime(df['Collection Date']).dt.strftime('%Y-%m')
+            df['Month-Year'] = pd.to_datetime(df['Collection Date']).dt.strftime('%Y-%m')
 
-        return df[['Collection Date', 'Vehicle No', 'Amount', 'Meter Reading', 'Name', 'Distance', 'Month-Year']]
+            return df[['Collection Date', 'Vehicle No', 'Amount', 'Meter Reading', 'Name', 'Distance', 'Month-Year']]
+        except Exception as e:
+            st.error(f"❌ Error loading collection data: {e}")
+            return pd.DataFrame()  # Return empty DataFrame if there's an error
+
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
     def load_expense_data(url):
@@ -186,10 +189,7 @@ else:
         return df[['Date', 'Investment Type', 'Investment Amount', 'Comment', 'Investor Name', 'Month-Year']]
 
 
-    
-
-
-    df = load_data(COLLECTION_Data)
+    df = load_collection_data()
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
