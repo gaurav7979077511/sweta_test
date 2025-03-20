@@ -51,28 +51,12 @@ try:
     )
     client = gspread.authorize(creds)
     AUTH_sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
+    COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
+    EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
+    INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
 except Exception as e:
     st.error(f"❌ Failed to connect to Google Sheets: {e}")
     st.stop()
-
-try:
-    COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
-    st.success("✅ Connected to Collection Sheet!")
-except Exception as e:
-    st.error(f"❌ Failed to connect to Collection Sheet: {e}")
-
-try:
-    EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
-    st.success("✅ Connected to Expense Sheet!")
-except Exception as e:
-    st.error(f"❌ Failed to connect to Expense Sheet: {e}")
-
-try:
-    INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
-    st.success("✅ Connected to Investment Sheet!")
-except Exception as e:
-    st.error(f"❌ Failed to connect to Investment Sheet: {e}")
-
 
 
 # Function to load authentication data securely
