@@ -24,17 +24,17 @@ AUTH_SHEET_NAME = "Sheet1"
 
 # --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "Form%20responses%201"
-COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
+#COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
 EXPENSE_SHEET_NAME = "Form%20responses%201"
-EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={EXPENSE_SHEET_NAME}"
+#EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={EXPENSE_SHEET_NAME}"
 
 # --- INVESTMENT DATA ---
 
 INVESTMENT_SHEET_NAME = "Investment_Details"
-INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={INVESTMENT_SHEET_NAME}"
+#INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={INVESTMENT_SHEET_NAME}"
 
 # Load credentials from Streamlit Secrets (create a copy)
 creds_dict = dict(st.secrets["gcp_service_account"])  # ✅ Create a mutable copy
@@ -50,6 +50,9 @@ try:
     )
     client = gspread.authorize(creds)
     AUTH_sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
+    COLLECTION_sheet = client.open_by_key(COLLECTION_SHEET_ID).worksheet(COLLECTION_SHEET_NAME)
+    EXPENSE_sheet = client.open_by_key(EXPENSE_SHEET_ID).worksheet(EXPENSE_SHEET_NAME)
+    INVESTMENT_sheet = client.open_by_key(INVESTMENT_SHEET_ID).worksheet(INVESTMENT_SHEET_NAME)
 except Exception as e:
     st.error(f"❌ Failed to connect to Google Sheets: {e}")
     st.stop()
@@ -119,7 +122,8 @@ else:
 
 
     def load_data(url):
-        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
+        data = COLLECTION_sheet.get_all_records()
+        df = pd.DataFrame(data)
         
         df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
@@ -139,14 +143,16 @@ else:
 
 
     def load_expense_data(url):
-        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
+        data = EXPENSE_sheet.get_all_records()
+        df = pd.DataFrame(data)
         df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount Used'] = pd.to_numeric(df['Amount Used'], errors='coerce')
         df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
         return df[['Date', 'Vehicle No', 'Reason of Expense', 'Amount Used', 'Any Bill', 'Month-Year']]
     
     def load_investment_data(url):
-        df = pd.read_csv(url, dayfirst=True)
+        data = INVESTMENT_sheet.get_all_records()
+        df = pd.DataFrame(data)
 
         # Strip spaces from column names to avoid formatting issues
         df.columns = df.columns.str.strip()
