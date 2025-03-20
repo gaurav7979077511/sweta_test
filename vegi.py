@@ -30,7 +30,7 @@ COLLECTION_SHEET_NAME = "collection"
 # --- EXPENSE DATA ---
 
 EXPENSE_SHEET_NAME = "expense"
-#EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={EXPENSE_SHEET_NAME}"
+EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={EXPENSE_SHEET_NAME}"
 
 # --- INVESTMENT DATA ---
 
@@ -182,9 +182,8 @@ else:
 
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def load_expense_data():
-        data = EXPENSE_sheet.get_all_records()  # Fetch data from private sheet
-        df = pd.DataFrame(data)
+    def load_expense_data(url):
+        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
         df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount Used'] = pd.to_numeric(df['Amount Used'], errors='coerce')
         df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
@@ -217,7 +216,7 @@ else:
 
 
     df = load_collection_data()
-    expense_df = load_expense_data()
+    expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
 
