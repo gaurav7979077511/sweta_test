@@ -127,7 +127,7 @@ else:
                 scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
             )
             client = gspread.authorize(creds)      
-            return client.open_by_key(COLLECTION_SHEET_ID).worksheet(COLLECTION_SHEET_NAME)
+            return client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
         except Exception as e:
             st.error(f"❌ Failed to connect to Google Sheets: {e}")
             st.stop()
