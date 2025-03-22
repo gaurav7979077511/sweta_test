@@ -18,10 +18,14 @@ EXPENSE_SHEET_ID = st.secrets["sheets"]["EXPENSE_SHEET_ID"]
 INVESTMENT_SHEET_ID = st.secrets["sheets"]["INVESTMENT_SHEET_ID"]
 
 
-# Authentication and Collection Google Sheets Details
+# Authentication Google Sheets Details
 
 AUTH_SHEET_NAME = "Sheet1"
+
+
+# --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "collection"
+COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
@@ -50,24 +54,18 @@ def connect_to_sheets():
         client = gspread.authorize(creds)
         
         # Open sheets once and reuse them
-        AUTH_sheet = client.open_by_key(st.secrets["sheets"]["AUTH_SHEET_ID"]).worksheet(AUTH_SHEET_NAME)
-        COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
-        EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
-        INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
-        
-        return AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet
+        return client.open_by_key(st.secrets["sheets"]["AUTH_SHEET_ID"]).worksheet(AUTH_SHEET_NAME)
+
 
     except Exception as e:
         st.error(f"❌ Failed to connect to Google Sheets: {e}")
         st.stop()
 
-# ✅ Get cached sheets
-AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet = connect_to_sheets()
 
 # Function to load authentication data securely
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_auth_data():
-    data = AUTH_sheet.get_all_records()
+    data = connect_to_sheets().get_all_records()
     df = pd.DataFrame(data)
     return df
 
@@ -126,55 +124,25 @@ else:
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
-
-    # ✅ Function to Connect to Google Sheets (with Caching)
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def connect_to_sheets_():
-        try:
-            creds = Credentials.from_service_account_info(
-                creds_dict, 
-                scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-            )
-            client = gspread.authorize(creds)
-            
-            # Open sheets once and reuse them
-            COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
-            #EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
-            #INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
-            
-            return COLLECTION_sheet #, EXPENSE_sheet, INVESTMENT_sheet
+    def load_data(url):
+        df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
+        
+        df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
+        df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
+        df['Meter Reading'] = pd.to_numeric(df['Meter Reading'], errors='coerce')
 
-        except Exception as e:
-            st.error(f"❌ Failed to connect to Google Sheets: {e}")
-            st.stop()
+        # Calculate Distance
+        df['Distance'] = df['Meter Reading'].diff().fillna(0)
 
-    # ✅ Get cached sheets
-    COLLECTION_sheet = connect_to_sheets_()
+        # Replace negative distances with the average of positive distances
+        positive_avg_distance = df[df['Distance'] > 0]['Distance'].mean()
+        df.loc[df['Distance'] < 0, 'Distance'] = np.round(positive_avg_distance)
 
+        # Month-Year Column
+        df['Month-Year'] = pd.to_datetime(df['Collection Date']).dt.strftime('%Y-%m')
 
-    @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def load_collection_data():
-        try:
-            data = COLLECTION_sheet.get_all_records()  # Fetch data from private sheet
-            df = pd.DataFrame(data)
-
-            # Convert Date columns
-            df['Collection Date'] = pd.to_datetime(df['Collection Date'], dayfirst=True, errors='coerce').dt.date
-            df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
-            df['Meter Reading'] = pd.to_numeric(df['Meter Reading'], errors='coerce')
-
-            # Calculate Distance
-            df['Distance'] = df['Meter Reading'].diff().fillna(0)
-            positive_avg_distance = df[df['Distance'] > 0]['Distance'].mean()
-            df.loc[df['Distance'] < 0, 'Distance'] = np.round(positive_avg_distance)
-
-            df['Month-Year'] = pd.to_datetime(df['Collection Date']).dt.strftime('%Y-%m')
-
-            return df[['Collection Date', 'Vehicle No', 'Amount', 'Meter Reading', 'Name', 'Distance', 'Month-Year']]
-        except Exception as e:
-            st.error(f"❌ Error loading collection data: {e}")
-            return pd.DataFrame()  # Return empty DataFrame if there's an error
-
+        return df[['Collection Date', 'Vehicle No', 'Amount', 'Meter Reading', 'Name', 'Distance', 'Month-Year']]
 
     @st.cache_data(ttl=300)  # Cache for 5 minutes
     def load_expense_data(url):
@@ -210,7 +178,10 @@ else:
         return df[['Date', 'Investment Type', 'Investment Amount', 'Comment', 'Investor Name', 'Month-Year']]
 
 
-    df = load_collection_data()
+    
+
+
+    df = load_data(COLLECTION_CSV_URL)
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
