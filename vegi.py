@@ -25,7 +25,7 @@ AUTH_SHEET_NAME = "Sheet1"
 
 # --- DATA LOADING ---
 COLLECTION_SHEET_NAME = "collection"
-COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
+#COLLECTION_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COLLECTION_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={COLLECTION_SHEET_NAME}"
 
 # --- EXPENSE DATA ---
 
@@ -51,17 +51,11 @@ def connect_to_sheets():
             creds_dict, 
             scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
-        client = gspread.authorize(creds)
-        
-        # Open sheets once and reuse them
+        client = gspread.authorize(creds)      
         return client.open_by_key(st.secrets["sheets"]["AUTH_SHEET_ID"]).worksheet(AUTH_SHEET_NAME)
-
-
     except Exception as e:
         st.error(f"❌ Failed to connect to Google Sheets: {e}")
         st.stop()
-
-
 # Function to load authentication data securely
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_auth_data():
@@ -124,6 +118,27 @@ else:
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
+    # ✅ Function to Connect to Google Sheets (with Caching)
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    def connect_to_collection_sheets():
+        try:
+            creds = Credentials.from_service_account_info(
+                creds_dict, 
+                scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+            )
+            client = gspread.authorize(creds)      
+            return client.open_by_key(COLLECTION_SHEET_ID).worksheet(COLLECTION_SHEET_NAME)
+        except Exception as e:
+            st.error(f"❌ Failed to connect to Google Sheets: {e}")
+            st.stop()
+    # Function to load authentication data securely
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    def load_collection_data():
+        data = connect_to_collection_sheets().get_all_records()
+        df = pd.DataFrame(data)
+        return df
+
+
     @st.cache_data(ttl=300)  # Cache for 5 minutes
     def load_data(url):
         df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
@@ -181,7 +196,7 @@ else:
     
 
 
-    df = load_data(COLLECTION_CSV_URL)
+    df = load_collection_data()
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
 
