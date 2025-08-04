@@ -220,7 +220,6 @@ else:
         total_investment = investment_df['Investment Amount'].sum()
 
         remaining_fund = total_collection + total_investment - total_expense
-        govind_expense_df = expense_df[expense_df['Expense By'] == 'Govind Kumar']
 
         last_month = df['Month-Year'].max()
         last_month_collection = df[df['Month-Year'] == last_month]['Amount'].sum()
