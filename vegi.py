@@ -207,6 +207,14 @@ else:
     bank_df = load_bank_data(BANK_CSV_URL)
 
 
+    # Calculate credits and debits
+    # Ensure Amount is numeric
+    bank_df['Amount'] = pd.to_numeric(bank_df['Amount'], errors='coerce').fillna(0)
+
+    # Calculate total credits and debits
+    total_credits = bank_df[bank_df['Transaction Type'].isin(['Collection_Credit', 'Investment_Credit'])]['Amount'].sum()
+    total_debits = bank_df[bank_df['Transaction Type'].isin(['Expence_Debit', 'Settlement_Debit'])]['Amount'].sum()
+    bank_balance = total_credits - total_debits
 
     # --- DASHBOARD UI ---
     st.sidebar.header("📂 Navigation")
@@ -225,11 +233,12 @@ else:
         last_month_collection = df[df['Month-Year'] == last_month]['Amount'].sum()
         last_month_expense = expense_df[expense_df['Month-Year'] == last_month]['Amount Used'].sum()
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         col1.metric(label="💰 Total Collection", value=f"₹{total_collection:,.2f}")
         col2.metric(label="📉 Total Expenses", value=f"₹{total_expense:,.2f}")
         col3.metric(label="💸 Total Investment", value=f"₹{total_investment:,.2f}")
         col4.metric(label="💵 Remaining Balance", value=f"₹{remaining_fund:,.2f}")
+        col5.metric(label="🏦 Bank Balance", value=f"₹{bank_balance:,.2f}")
 
 
         st.markdown("---")
