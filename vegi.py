@@ -222,7 +222,22 @@ else:
 
     bank_balance = total_credits - total_debits
 
-    #------------Bank Calculation End
+    #------------Bank Calculation End-----------------
+
+
+
+    #-------------Remaining Balance at you ----------
+
+    st.sidebar.header("📂 Your Wallet")
+    name_login_user=st.session_state.user_name
+    total_collection_user = df[df['Received By'].isin([name_login_user])]['Amount'].sum()
+    total_expense_user = expense_df[expense_df['Expense By'].isin([name_login_user])]['Amount Used'].sum()
+    remaining_fund_user =total_collection_user-total_expense_user
+    st.sidebar.header(remaining_fund_user)
+
+
+
+    #---------------Remaining Balance calculation end------------
 
     # --- DASHBOARD UI ---
     st.sidebar.header("📂 Navigation")
