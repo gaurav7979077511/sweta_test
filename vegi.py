@@ -209,11 +209,11 @@ else:
 
     # Calculate credits and debits
     # Ensure Amount is numeric
-    df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce').fillna(0)
+    bank_df['Amount'] = pd.to_numeric(bank_df['Amount'], errors='coerce').fillna(0)
 
     # Calculate total credits and debits
-    total_credits = df[df['Transaction Type'].isin(['Collection_Credit', 'Investment_Credit'])]['Amount'].sum()
-    total_debits = df[df['Transaction Type'].isin(['Expence_Debit', 'Settlement_Debit'])]['Amount'].sum()
+    total_credits = bank_df[bank_df['Transaction Type'].isin(['Collection_Credit', 'Investment_Credit'])]['Amount'].sum()
+    total_debits = bank_df[bank_df['Transaction Type'].isin(['Expence_Debit', 'Settlement_Debit'])]['Amount'].sum()
     bank_balance = total_credits - total_debits
 
 
