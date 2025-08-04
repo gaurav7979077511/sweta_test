@@ -208,14 +208,14 @@ else:
 
 
     # Calculate credits and debits
-    # Ensure Amount is numeric
-    #bank_df['Amount'] = pd.to_numeric(bank_df['Amount'], errors='coerce').fillna(0)
+    credit_types = ["Collection_Credit", "Investment_Credit"]
+    debit_types = ["Expence_Debit", "Settelment_Debit"]
 
-    # Calculate total credits and debits
-    #total_credits = bank_df[bank_df['Transaction Type'].isin(['Collection_Credit', 'Investment_Credit'])]['Amount'].sum()
-    #total_debits = bank_df[bank_df['Transaction Type'].isin(['Expence_Debit', 'Settlement_Debit'])]['Amount'].sum()
-    #bank_balance = total_credits - total_debits
+    total_credit = bank_df[bank_df['Transaction Type'].isin(credit_types)]['Amount'].sum()
+    total_debit = bank_df[bank_df['Transaction Type'].isin(debit_types)]['Amount'].sum()
 
+    # Final bank balance
+    bank_balance = total_credit - total_debit
 
 
 
@@ -242,7 +242,7 @@ else:
         col2.metric(label="📉 Total Expenses", value=f"₹{total_expense:,.2f}")
         col3.metric(label="💸 Total Investment", value=f"₹{total_investment:,.2f}")
         col4.metric(label="💵 Remaining Balance", value=f"₹{remaining_fund:,.2f}")
-        col5.metric(label="🏦 Bank Balance", value=f"₹{remaining_fund:,.2f}")
+        col5.metric(label="🏦 Bank Balance", value=f"₹{bank_balance:,.2f}")
 
 
 
