@@ -16,6 +16,7 @@ AUTH_SHEET_ID = st.secrets["sheets"]["AUTH_SHEET_ID"]
 COLLECTION_SHEET_ID = st.secrets["sheets"]["COLLECTION_SHEET_ID"]
 EXPENSE_SHEET_ID = st.secrets["sheets"]["EXPENSE_SHEET_ID"]
 INVESTMENT_SHEET_ID = st.secrets["sheets"]["INVESTMENT_SHEET_ID"]
+BANK_SHEET_ID = st.secrets["sheets"]["BANK_SHEET_ID"]
 
 
 # Authentication Google Sheets Details
@@ -36,6 +37,12 @@ EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gv
 
 INVESTMENT_SHEET_NAME = "Investment_Details"
 INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={INVESTMENT_SHEET_NAME}"
+
+
+# --- Bank DATA ---
+
+BANK_SHEET_NAME = "Bank_Transaction"
+BANK_CSV_URL = f"https://docs.google.com/spreadsheets/d/{BANK_SHEET_ID}/gviz/tq?tqx=out:csv&sheet={BANK_SHEET_NAME}"
 
 # ✅ Load credentials from Streamlit Secrets (Create a Copy)
 creds_dict = dict(st.secrets["gcp_service_account"])  # Create a mutable copy
@@ -58,15 +65,16 @@ def connect_to_sheets():
         COLLECTION_sheet = client.open_by_key(st.secrets["sheets"]["COLLECTION_SHEET_ID"]).worksheet(COLLECTION_SHEET_NAME)
         EXPENSE_sheet = client.open_by_key(st.secrets["sheets"]["EXPENSE_SHEET_ID"]).worksheet(EXPENSE_SHEET_NAME)
         INVESTMENT_sheet = client.open_by_key(st.secrets["sheets"]["INVESTMENT_SHEET_ID"]).worksheet(INVESTMENT_SHEET_NAME)
+        BANK_sheet = client.open_by_key(st.secrets["sheets"]["BANK_SHEET_ID"]).worksheet(BANK_SHEET_NAME)
         
-        return AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet
+        return AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet , BANK_sheet
 
     except Exception as e:
         st.error(f"❌ Failed to connect to Google Sheets: {e}")
         st.stop()
 
 # ✅ Get cached sheets
-AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet = connect_to_sheets()
+AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet ,BANK_sheet= connect_to_sheets()
 
 # Function to load authentication data securely
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -183,6 +191,12 @@ else:
 
         return df[['Date', 'Investment Type', 'Investment Amount', 'Comment', 'Investor Name', 'Month-Year']]
 
+    @st.cache_data(ttl=300)
+    def load_bank_data(url):
+        df = pd.read_csv(url, dayfirst=True)
+        df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce').dt.date
+        df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
+        return df
 
     
 
@@ -190,11 +204,13 @@ else:
     df = load_data(COLLECTION_CSV_URL)
     expense_df = load_expense_data(EXPENSE_CSV_URL)
     investment_df = load_investment_data(INVESTMENT_CSV_URL)
+    bank_df = load_bank_data(BANK_CSV_URL)
+
 
 
     # --- DASHBOARD UI ---
     st.sidebar.header("📂 Navigation")
-    page = st.sidebar.radio("Go to:", ["Dashboard", "Monthly Summary", "Grouped Data", "Expenses", "Investment", "Collection Data"])
+    page = st.sidebar.radio("Go to:", ["Dashboard", "Monthly Summary", "Grouped Data", "Expenses", "Investment", "Collection Data", "Bank Transaction" ])
 
     if page == "Dashboard":
         st.title("📊 Orga Yatra Dashboard")
@@ -204,6 +220,7 @@ else:
         total_investment = investment_df['Investment Amount'].sum()
 
         remaining_fund = total_collection + total_investment - total_expense
+        govind_expense_df = expense_df[expense_df['Expense By'] == 'Govind Kumar']
 
         last_month = df['Month-Year'].max()
         last_month_collection = df[df['Month-Year'] == last_month]['Amount'].sum()
@@ -329,3 +346,18 @@ else:
         # --- DISPLAY DETAILED DATA ---
         st.write("### 🔍 Detailed Investment Data")
         st.dataframe(investment_df.sort_values(by="Date", ascending=False))
+
+    elif page == "Bank Transaction":
+        st.title("🏦 Bank Transactions")
+
+        # Show current balance placeholder
+        st.subheader("💰 Current Bank Balance")
+        st.write("Calculating...")
+
+        # Grouped by Month-Year
+        st.subheader("📊 Monthly Transaction Summary")
+        st.write("This will show total credit/debit by type.")
+
+        # Show full transaction log
+        st.subheader("📋 Full Bank Transaction Log")
+        st.dataframe(bank_df.sort_values(by="Date", ascending=False))
