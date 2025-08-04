@@ -212,9 +212,17 @@ else:
     bank_df['Amount'] = pd.to_numeric(bank_df['Amount'], errors='coerce').fillna(0)
 
     # Calculate total credits and debits
-    total_credits = bank_df[bank_df['Transaction Type'].isin(['Collection_Credit', 'Investment_Credit'])]['Amount'].sum()
-    total_debits = bank_df[bank_df['Transaction Type'].isin(['Expence_Debit', 'Settlement_Debit'])]['Amount'].sum()
+    Collection_Credit_Bank=bank_df[bank_df['Transaction Type'].isin(['Collection_Credit'])]['Amount'].sum()
+    Investment_Credit_Bank=bank_df[bank_df['Transaction Type'].isin(['Investment_Credit'])]['Amount'].sum()
+    total_credits = Collection_Credit_Bank+Investment_Credit_Bank
+
+    Expence_Debit_Bank=bank_df[bank_df['Transaction Type'].isin(['Expence_Debit'])]['Amount'].sum()
+    Settlement_Debit_Bank=bank_df[bank_df['Transaction Type'].isin(['Settlement_Debit'])]['Amount'].sum()
+    total_debits = Expence_Debit_Bank+Settlement_Debit_Bank
+
     bank_balance = total_credits - total_debits
+
+    #------------Bank Calculation End
 
     # --- DASHBOARD UI ---
     st.sidebar.header("📂 Navigation")
@@ -224,8 +232,8 @@ else:
         st.title("📊 Orga Yatra Dashboard")
         
         total_collection = df['Amount'].sum()
-        total_expense = expense_df['Amount Used'].sum()
-        total_investment = investment_df['Investment Amount'].sum()
+        total_expense = expense_df['Amount Used'].sum() + Expence_Debit_Bank
+        total_investment = investment_df['Investment Amount'].sum() + Investment_Credit_Bank
 
         remaining_fund = total_collection + total_investment - total_expense
 
