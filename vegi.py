@@ -543,9 +543,9 @@ else:
     
     
     
-        elif page == "Collection Data":
-            st.title("📋 Full Collection Data")
-            st.dataframe(df.sort_values(by="Collection Date", ascending=False))
+    elif page == "Collection Data":
+        st.title("📋 Full Collection Data")
+        st.dataframe(df.sort_values(by="Collection Date", ascending=False))
 
 
     elif page == "Investment":
