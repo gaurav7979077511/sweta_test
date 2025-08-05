@@ -299,7 +299,7 @@ else:
         
         # === Individual Totals (Govind Kumar) ===
         govind_total_collection = df[df['Received By'].isin(['Govind Kumar'])]['Amount'].sum()
-        govind_total_investment = investment_df[investment_df['Received From'].isin(['Govind Kumar'])]['Investment Amount'].sum()
+        govind_total_investment = investment_df[investment_df['Investor Name'].isin(['Govind Kumar'])]['Investment Amount'].sum()
         govind_total_expense = expense_df[expense_df['Expense By'].isin(['Govind Kumar'])]['Amount Used'].sum()
 
         govind_last_month_collection = df[(df['Received By'].isin(['Govind Kumar'])) & (df['Month-Year'] == last_month)]['Amount'].sum()
@@ -307,7 +307,7 @@ else:
 
         # === Individual Totals (Kumar Gaurav) ===
         gaurav_total_collection = df[df['Received By'].isin(['Kumar Gaurav'])]['Amount'].sum()
-        gaurav_total_investment = investment_df[investment_df['Received From'].isin(['Kumar Gaurav'])]['Investment Amount'].sum()
+        gaurav_total_investment = investment_df[investment_df['Investor Name'].isin(['Kumar Gaurav'])]['Investment Amount'].sum()
         gaurav_total_expense = expense_df[expense_df['Expense By'].isin(['Kumar Gaurav'])]['Amount Used'].sum()
 
         gaurav_last_month_collection = df[(df['Received By'].isin(['Kumar Gaurav'])) & (df['Month-Year'] == last_month)]['Amount'].sum()
