@@ -568,5 +568,4 @@ else:
     # 🔁 Refresh button
     if st.sidebar.button("🔁 Refresh"):
         st.cache_resource.clear()
-        st.success("✅ Sheets connection refreshed!")
         st.experimental_rerun()
