@@ -352,73 +352,73 @@ else:
         st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
 
     elif page == "Monthly Summary":
-    st.title("📊 Monthly Summary Report")
-
-    # --- Monthly Aggregation ---
-    # Govind and Gaurav Collection
-    govind_monthly = df[df['Received By'] == 'Govind Kumar'].groupby('Month-Year', as_index=False)['Amount'].sum().rename(columns={"Amount": "Govind Collection"})
-    gaurav_monthly = df[df['Received By'] == 'Kumar Gaurav'].groupby('Month-Year', as_index=False)['Amount'].sum().rename(columns={"Amount": "Gaurav Collection"})
-
-    # Govind and Gaurav Expenses
-    govind_expense_monthly = expense_df[expense_df['Expense By'] == 'Govind Kumar'].groupby('Month-Year', as_index=False)['Amount Used'].sum().rename(columns={"Amount Used": "Govind Expense"})
-    gaurav_expense_monthly = expense_df[expense_df['Expense By'] == 'Kumar Gaurav'].groupby('Month-Year', as_index=False)['Amount Used'].sum().rename(columns={"Amount Used": "Gaurav Expense"})
-
-    # Merge all
-    monthly_summary = pd.merge(govind_monthly, gaurav_monthly, on="Month-Year", how="outer")
-    monthly_summary = pd.merge(monthly_summary, govind_expense_monthly, on="Month-Year", how="outer")
-    monthly_summary = pd.merge(monthly_summary, gaurav_expense_monthly, on="Month-Year", how="outer")
-
-    monthly_summary.fillna(0, inplace=True)
-
-    # Total columns
-    monthly_summary["Total Collection"] = monthly_summary["Govind Collection"] + monthly_summary["Gaurav Collection"]
-    monthly_summary["Total Expense"] = monthly_summary["Govind Expense"] + monthly_summary["Gaurav Expense"]
-
-    # Net Balance
-    monthly_summary["Net Balance"] = monthly_summary["Total Collection"] - monthly_summary["Total Expense"]
-
-    # Percentage Change
-    monthly_summary["Collection Change (%)"] = monthly_summary["Total Collection"].pct_change().fillna(0) * 100
-    monthly_summary["Expense Change (%)"] = monthly_summary["Total Expense"].pct_change().fillna(0) * 100
-
-    # Reorder columns
-    ordered_columns = [
-        "Month-Year", 
-        "Govind Collection", "Gaurav Collection", 
-        "Total Collection", "Collection Change (%)", 
-        "Govind Expense", "Gaurav Expense", 
-        "Total Expense", "Expense Change (%)", 
-        "Net Balance"
-    ]
-    monthly_summary = monthly_summary[ordered_columns]
-
-    # === UI ===
-    st.subheader("📅 Monthly Breakdown")
-    st.dataframe(monthly_summary.style.format({
-        "Govind Collection": "₹{:.2f}",
-        "Gaurav Collection": "₹{:.2f}",
-        "Total Collection": "₹{:.2f}",
-        "Collection Change (%)": "{:+.1f}%",
-        "Govind Expense": "₹{:.2f}",
-        "Gaurav Expense": "₹{:.2f}",
-        "Total Expense": "₹{:.2f}",
-        "Expense Change (%)": "{:+.1f}%",
-        "Net Balance": "₹{:.2f}"
-    }), use_container_width=True)
-
-    # === Charts ===
-    chart_option = st.radio("📊 Show Chart for:", ["Collection vs Expense", "Net Balance Trend"])
+        st.title("📊 Monthly Summary Report")
     
-    if chart_option == "Collection vs Expense":
-        chart_df = monthly_summary[["Month-Year", "Total Collection", "Total Expense"]].set_index("Month-Year")
-        st.bar_chart(chart_df)
-    else:
-        net_df = monthly_summary[["Month-Year", "Net Balance"]].set_index("Month-Year")
-        st.line_chart(net_df)
-
-    # === Download Option ===
-    csv = monthly_summary.to_csv(index=False).encode("utf-8")
-    st.download_button("⬇️ Download Monthly Summary (CSV)", data=csv, file_name="monthly_summary.csv", mime="text/csv")
+        # --- Monthly Aggregation ---
+        # Govind and Gaurav Collection
+        govind_monthly = df[df['Received By'] == 'Govind Kumar'].groupby('Month-Year', as_index=False)['Amount'].sum().rename(columns={"Amount": "Govind Collection"})
+        gaurav_monthly = df[df['Received By'] == 'Kumar Gaurav'].groupby('Month-Year', as_index=False)['Amount'].sum().rename(columns={"Amount": "Gaurav Collection"})
+    
+        # Govind and Gaurav Expenses
+        govind_expense_monthly = expense_df[expense_df['Expense By'] == 'Govind Kumar'].groupby('Month-Year', as_index=False)['Amount Used'].sum().rename(columns={"Amount Used": "Govind Expense"})
+        gaurav_expense_monthly = expense_df[expense_df['Expense By'] == 'Kumar Gaurav'].groupby('Month-Year', as_index=False)['Amount Used'].sum().rename(columns={"Amount Used": "Gaurav Expense"})
+    
+        # Merge all
+        monthly_summary = pd.merge(govind_monthly, gaurav_monthly, on="Month-Year", how="outer")
+        monthly_summary = pd.merge(monthly_summary, govind_expense_monthly, on="Month-Year", how="outer")
+        monthly_summary = pd.merge(monthly_summary, gaurav_expense_monthly, on="Month-Year", how="outer")
+    
+        monthly_summary.fillna(0, inplace=True)
+    
+        # Total columns
+        monthly_summary["Total Collection"] = monthly_summary["Govind Collection"] + monthly_summary["Gaurav Collection"]
+        monthly_summary["Total Expense"] = monthly_summary["Govind Expense"] + monthly_summary["Gaurav Expense"]
+    
+        # Net Balance
+        monthly_summary["Net Balance"] = monthly_summary["Total Collection"] - monthly_summary["Total Expense"]
+    
+        # Percentage Change
+        monthly_summary["Collection Change (%)"] = monthly_summary["Total Collection"].pct_change().fillna(0) * 100
+        monthly_summary["Expense Change (%)"] = monthly_summary["Total Expense"].pct_change().fillna(0) * 100
+    
+        # Reorder columns
+        ordered_columns = [
+            "Month-Year", 
+            "Govind Collection", "Gaurav Collection", 
+            "Total Collection", "Collection Change (%)", 
+            "Govind Expense", "Gaurav Expense", 
+            "Total Expense", "Expense Change (%)", 
+            "Net Balance"
+        ]
+        monthly_summary = monthly_summary[ordered_columns]
+    
+        # === UI ===
+        st.subheader("📅 Monthly Breakdown")
+        st.dataframe(monthly_summary.style.format({
+            "Govind Collection": "₹{:.2f}",
+            "Gaurav Collection": "₹{:.2f}",
+            "Total Collection": "₹{:.2f}",
+            "Collection Change (%)": "{:+.1f}%",
+            "Govind Expense": "₹{:.2f}",
+            "Gaurav Expense": "₹{:.2f}",
+            "Total Expense": "₹{:.2f}",
+            "Expense Change (%)": "{:+.1f}%",
+            "Net Balance": "₹{:.2f}"
+        }), use_container_width=True)
+    
+        # === Charts ===
+        chart_option = st.radio("📊 Show Chart for:", ["Collection vs Expense", "Net Balance Trend"])
+        
+        if chart_option == "Collection vs Expense":
+            chart_df = monthly_summary[["Month-Year", "Total Collection", "Total Expense"]].set_index("Month-Year")
+            st.bar_chart(chart_df)
+        else:
+            net_df = monthly_summary[["Month-Year", "Net Balance"]].set_index("Month-Year")
+            st.line_chart(net_df)
+    
+        # === Download Option ===
+        csv = monthly_summary.to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Download Monthly Summary (CSV)", data=csv, file_name="monthly_summary.csv", mime="text/csv")
 
 
     elif page == "Grouped Data":
