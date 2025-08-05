@@ -477,27 +477,75 @@ else:
     
 
     elif page == "Expenses":
-        st.title("💸 Expense Details")
+        st.title("💸 Expense Insights")
 
-        # Group expenses by Month-Year and sum them
-        expense_summary = expense_df.groupby('Month-Year', as_index=False)['Amount Used'].sum()
-
-        # Display the summary table
-        st.write("### 📊 Monthly Expense Summary")
-        st.dataframe(expense_summary)
-
-        # Plot bar chart
-        st.write("### 📉 Expense Trend")
-        st.bar_chart(expense_summary.set_index("Month-Year"))
-
-        # Display detailed expense data
-        st.write("### 🔍 Detailed Expense Data")
+        # ───────────────────────────────────────────────────────────────
+        # 🔹 Section 1: Total Expense Summary
+        total_manual_expense = expense_df["Amount Used"].sum()
+        total_bank_expense = govind_expense_debit + gaurav_expense_debit
+        total_expense = total_manual_expense + total_bank_expense
+    
+        col1, col2, col3 = st.columns(3)
+        col1.metric("🧾 Manual Entry Expense (Sheet)", f"₹{total_manual_expense:,.2f}")
+        col2.metric("🏦 Bank Debits (Govind + Gaurav)", f"₹{total_bank_expense:,.2f}")
+        col3.metric("💰 Total Expense (Combined)", f"₹{total_expense:,.2f}")
+    
+        st.markdown("---")
+    
+        # ───────────────────────────────────────────────────────────────
+        # 🔹 Section 2: Bank-Based Expense Breakdown
+        st.subheader("🏦 Bank-Based Expenses")
+    
+        bank_by_person_df = pd.DataFrame({
+            "Person": ["Govind Kumar", "Kumar Gaurav"],
+            "Amount Paid via Bank": [govind_expense_debit, gaurav_expense_debit]
+        })
+    
+        st.bar_chart(bank_by_person_df.set_index("Person"))
+    
+        with st.expander("🔍 View Bank Expense Transactions"):
+            bank_expense_df = bank_df[bank_df['Transaction Type'] == 'Expence_Debit'][['Date', 'Transaction By', 'Amount', 'Comment']]
+            st.dataframe(bank_expense_df.sort_values(by="Date", ascending=False))
+    
+        st.markdown("---")
+    
+        # ───────────────────────────────────────────────────────────────
+        # 🔹 Section 3: Manually Entered Expenses
+        st.subheader("🧾 Manual Expense Summary (from Sheet)")
+    
+        # Monthly manual expenses
+        monthly_manual_expense = expense_df.groupby("Month-Year", as_index=False)['Amount Used'].sum()
+        st.bar_chart(monthly_manual_expense.set_index("Month-Year"))
+    
+        # Expense by person (pie)
+        person_expense = expense_df.groupby("Expense By", as_index=False)["Amount Used"].sum()
+    
+        col1, col2 = st.columns(2)
+    
+        with col1:
+            st.write("### 👤 Expense by Person (Manual)")
+            fig1, ax1 = plt.subplots()
+            ax1.pie(person_expense["Amount Used"], labels=person_expense["Expense By"], autopct="%1.1f%%", startangle=90)
+            ax1.axis("equal")
+            st.pyplot(fig1)
+    
+        with col2:
+            st.write("### 📈 Monthly Manual Expenses")
+            st.line_chart(monthly_manual_expense.set_index("Month-Year"))
+    
+        st.markdown("---")
+    
+        # ───────────────────────────────────────────────────────────────
+        # 🔹 Section 4: Detailed Manual Expense Entries
+        st.subheader("📋 Detailed Manual Expense Entries")
         st.dataframe(expense_df.sort_values(by="Date", ascending=False))
-
-
-    elif page == "Collection Data":
-        st.title("📋 Full Collection Data")
-        st.dataframe(df.sort_values(by="Collection Date", ascending=False))
+    
+    
+    
+    
+        elif page == "Collection Data":
+            st.title("📋 Full Collection Data")
+            st.dataframe(df.sort_values(by="Collection Date", ascending=False))
 
 
     elif page == "Investment":
