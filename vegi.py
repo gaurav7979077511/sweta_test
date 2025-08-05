@@ -73,11 +73,7 @@ def connect_to_sheets():
         st.error(f"❌ Failed to connect to Google Sheets: {e}")
         st.stop()
 
-# 🔁 Refresh button
-if st.sidebar.button("🔁 Refresh Google Sheets Connection"):
-    st.cache_resource.clear()
-    st.success("✅ Sheets connection refreshed!")
-    st.experimental_rerun()
+
 
 
 # ✅ Get cached sheets
@@ -568,3 +564,9 @@ else:
         # Show full transaction log
         st.subheader("📋 Full Bank Transaction Log")
         st.dataframe(bank_df.sort_values(by="Date", ascending=False))
+    
+    # 🔁 Refresh button
+    if st.sidebar.button("🔁 Refresh"):
+        st.cache_resource.clear()
+        st.success("✅ Sheets connection refreshed!")
+        st.experimental_rerun()
