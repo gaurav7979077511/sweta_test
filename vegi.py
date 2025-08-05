@@ -311,21 +311,26 @@ else:
 
         # === Combined Totals ===
         total_collection = govind_total_collection + gaurav_total_collection
-        total_investment = govind_total_investment + gaurav_total_investment
+        total_investment = govind_total_investment + gaurav_total_investment + Investment_Credit_Bank
         total_expense = govind_total_expense + gaurav_total_expense
 
-        remaining_fund = total_collection + total_investment - total_expense
+  
+        remaining_fund_gaurav= gaurav_total_collection - gaurav_total_expense - gaurav_collection_credit + gaurav_settlement_debit - gaurav_settlement_credit
+        remaining_fund_govind= govind_total_collection - govind_total_expense - govind_collection_credit + govind_settlement_debit - govind_settlement_credit
+        Net_balance=remaining_fund_gaurav + remaining_fund_govind + bank_balance
 
         last_month_collection = govind_last_month_collection + gaurav_last_month_collection
         last_month_expense = govind_last_month_expense + gaurav_last_month_expense
 
         
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3, col4, col5,col6,col7 = st.columns(7)
         col1.metric(label="💰 Total Collection", value=f"₹{total_collection:,.2f}")
         col2.metric(label="📉 Total Expenses", value=f"₹{total_expense:,.2f}")
         col3.metric(label="💸 Total Investment", value=f"₹{total_investment:,.2f}")
-        col4.metric(label="💵 Remaining Balance", value=f"₹{remaining_fund:,.2f}")
-        col5.metric(label="🏦 Bank Balance", value=f"₹{bank_balance:,.2f}")
+        col4.metric(label="💵 Govind Balance", value=f"₹{remaining_fund_gaurav:,.2f}")
+        col5.metric(label="💵 Gaurav Balance", value=f"₹{remaining_fund_govind:,.2f}")
+        col6.metric(label="🏦 Bank Balance", value=f"₹{bank_balance:,.2f}")
+        col7.metric(label="🏦 Net Balance", value=f"₹{Net_balance:,.2f}")
 
 
         st.markdown("---")
