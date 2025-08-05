@@ -51,7 +51,7 @@ creds_dict = dict(st.secrets["gcp_service_account"])  # Create a mutable copy
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
 # ✅ Function to Connect to Google Sheets (with Caching)
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_resource  # Cache for 5 minutes
 def connect_to_sheets():
     try:
         creds = Credentials.from_service_account_info(
@@ -73,11 +73,18 @@ def connect_to_sheets():
         st.error(f"❌ Failed to connect to Google Sheets: {e}")
         st.stop()
 
+# 🔁 Refresh button
+if st.sidebar.button("🔁 Refresh Google Sheets Connection"):
+    st.cache_resource.clear()
+    st.success("✅ Sheets connection refreshed!")
+    st.experimental_rerun()
+
+
 # ✅ Get cached sheets
 AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet ,BANK_sheet= connect_to_sheets()
 
 # Function to load authentication data securely
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_resource # Cache for 5 minutes
 def load_auth_data():
     data = AUTH_sheet.get_all_records()
     df = pd.DataFrame(data)
@@ -138,7 +145,7 @@ else:
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
-    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    @st.cache_resource # Cache for 5 minutes
     def load_data(url):
         df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
         
@@ -161,7 +168,7 @@ else:
 
         return df[['Collection Date', 'Vehicle No', 'Amount', 'Meter Reading', 'Name', 'Distance', 'Month-Year','Received By']]
 
-    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    @st.cache_resource  # Cache for 5 minutes
     def load_expense_data(url):
         df = pd.read_csv(url, dayfirst=True, dtype={"Vehicle No": str})  # Ensure Vehicle No remains a string
         df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce').dt.date
@@ -169,7 +176,7 @@ else:
         df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
         return df[['Date', 'Vehicle No', 'Reason of Expense', 'Amount Used', 'Any Bill', 'Month-Year','Expense By']]
     
-    @st.cache_data(ttl=300)  # Cache for 5 minutes    
+    @st.cache_resource  # Cache for 5 minutes    
     def load_investment_data(url):
         df = pd.read_csv(url, dayfirst=True)
 
@@ -194,7 +201,7 @@ else:
 
         return df[['Date', 'Investment Type', 'Investment Amount', 'Comment', 'Investor Name', 'Month-Year']]
 
-    @st.cache_data(ttl=300)
+    @st.cache_resource
     def load_bank_data(url):
         df = pd.read_csv(url, dayfirst=True)
         df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce').dt.date
