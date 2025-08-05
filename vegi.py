@@ -285,16 +285,37 @@ else:
     if page == "Dashboard":
         st.title("📊 Orga Yatra Dashboard")
         
-        total_collection = df['Amount'].sum()
-        total_expense = expense_df['Amount Used'].sum() + Expence_Debit_Bank
-        total_investment = investment_df['Investment Amount'].sum() + Investment_Credit_Bank
+        # Get latest month
+        last_month = df['Month-Year'].max()
+
+        # Initialize individual variables
+        govind_total_collection = df[df['Received By'] == 'Govind Kumar']['Amount'].sum()
+        gaurav_total_collection = df[df['Received By'] == 'Kumar Gaurav']['Amount'].sum()
+
+        govind_total_investment = investment_df[investment_df['Received From'] == 'Govind Kumar']['Investment Amount'].sum()
+        gaurav_total_investment = investment_df[investment_df['Received From'] == 'Kumar Gaurav']['Investment Amount'].sum()
+
+        govind_total_expense = expense_df[expense_df['Expense By'] == 'Govind Kumar']['Amount Used'].sum()
+        gaurav_total_expense = expense_df[expense_df['Expense By'] == 'Kumar Gaurav']['Amount Used'].sum()
+
+        govind_last_month_collection = df[(df['Received By'] == 'Govind Kumar') & (df['Month-Year'] == last_month)]['Amount'].sum()
+        gaurav_last_month_collection = df[(df['Received By'] == 'Kumar Gaurav') & (df['Month-Year'] == last_month)]['Amount'].sum()
+
+        govind_last_month_expense = expense_df[(expense_df['Expense By'] == 'Govind Kumar') & (expense_df['Month-Year'] == last_month)]['Amount Used'].sum()
+        gaurav_last_month_expense = expense_df[(expense_df['Expense By'] == 'Kumar Gaurav') & (expense_df['Month-Year'] == last_month)]['Amount Used'].sum()
+
+        # Combined totals
+        total_collection = govind_total_collection + gaurav_total_collection
+        total_investment = govind_total_investment + gaurav_total_investment
+        total_expense = govind_total_expense + gaurav_total_expense
 
         remaining_fund = total_collection + total_investment - total_expense
 
-        last_month = df['Month-Year'].max()
-        last_month_collection = df[df['Month-Year'] == last_month]['Amount'].sum()
-        last_month_expense = expense_df[expense_df['Month-Year'] == last_month]['Amount Used'].sum()
+        # Combined last month totals
+        last_month_collection = govind_last_month_collection + gaurav_last_month_collection
+        last_month_expense = govind_last_month_expense + gaurav_last_month_expense
 
+        
         col1, col2, col3, col4, col5 = st.columns(5)
         col1.metric(label="💰 Total Collection", value=f"₹{total_collection:,.2f}")
         col2.metric(label="📉 Total Expenses", value=f"₹{total_expense:,.2f}")
