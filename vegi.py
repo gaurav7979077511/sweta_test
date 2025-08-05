@@ -288,9 +288,9 @@ else:
         # Get latest month
         last_month = df['Month-Year'].max()
 
-        print("df columns:", df.columns.tolist())
-        print("expense_df columns:", expense_df.columns.tolist())
-        print("investment_df columns:", investment_df.columns.tolist())
+        st.write("df columns:", df.columns.tolist())
+        st.write("expense_df columns:", expense_df.columns.tolist())
+        st.write("investment_df columns:", investment_df.columns.tolist())
 
         # Optional: Clean column names in case of leading/trailing spaces
         df.columns = df.columns.str.strip()
