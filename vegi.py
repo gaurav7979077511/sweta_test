@@ -423,17 +423,55 @@ else:
 
     elif page == "Grouped Data":
         st.title("🔍 Grouped Collection Data")
+    
         group_by = st.sidebar.radio("🔄 Group Data By:", ["Name", "Vehicle No"])
-        selected_month = st.sidebar.selectbox("📅 Select Month-Year:", sorted(df['Month-Year'].unique(), reverse=True))
-        df_filtered = df[df['Month-Year'] == selected_month]
-
-        if group_by == "Name":
-            grouped_df = df_filtered.groupby('Name', as_index=False)['Amount'].sum()
+        selected_month = st.sidebar.selectbox("📅 Select Month-Year:", ["All"] + sorted(df['Month-Year'].unique(), reverse=True))
+    
+        chart_type = st.sidebar.radio("📈 Show Chart For:", ["Amount", "Distance", "Both"])
+        top_n = st.sidebar.slider("🔢 Show Top N Groups", min_value=3, max_value=20, value=10)
+    
+        # Filter by month
+        df_filtered = df.copy()
+        if selected_month != "All":
+            df_filtered = df[df['Month-Year'] == selected_month]
+    
+        # Grouping logic
+        grouped_df = df_filtered.groupby(group_by, as_index=False).agg({
+            "Amount": "sum",
+            "Distance": "sum",
+            "Collection Date": "count"
+        }).rename(columns={"Collection Date": "Total Collections"})
+    
+        # Add averages
+        grouped_df["Avg Amount"] = grouped_df["Amount"] / grouped_df["Total Collections"]
+        grouped_df["Avg Distance"] = grouped_df["Distance"] / grouped_df["Total Collections"]
+    
+        # Sort and get top N
+        grouped_df = grouped_df.sort_values(by="Amount", ascending=False).head(top_n)
+    
+        # Display Data
+        st.subheader(f"📊 Top {top_n} - Grouped by {group_by}")
+        st.dataframe(grouped_df.style.format({
+            "Amount": "₹{:.2f}",
+            "Distance": "{:.0f} km",
+            "Avg Amount": "₹{:.2f}",
+            "Avg Distance": "{:.1f} km"
+        }), use_container_width=True)
+    
+        # Download CSV
+        csv_grouped = grouped_df.to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Download Grouped Data", data=csv_grouped, file_name="grouped_data.csv", mime="text/csv")
+    
+        # Chart View
+        st.subheader("📈 Grouped Chart")
+    
+        if chart_type == "Amount":
+            st.bar_chart(grouped_df.set_index(group_by)["Amount"])
+        elif chart_type == "Distance":
+            st.bar_chart(grouped_df.set_index(group_by)["Distance"])
         else:
-            grouped_df = df_filtered.groupby('Vehicle No', as_index=False)['Amount'].sum()
-
-        st.dataframe(grouped_df)
-        st.bar_chart(grouped_df.set_index(group_by)["Amount"])
+            st.line_chart(grouped_df.set_index(group_by)[["Amount", "Distance"]])
+    
 
     elif page == "Expenses":
         st.title("💸 Expense Details")
