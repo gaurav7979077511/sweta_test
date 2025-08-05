@@ -146,8 +146,11 @@ else:
         df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
         df['Meter Reading'] = pd.to_numeric(df['Meter Reading'], errors='coerce')
 
-        # Calculate Distance
-        df['Distance'] = df['Meter Reading'].diff().fillna(0)
+        # Assuming df is your DataFrame and it's already sorted by 'Collection Date'
+        df = df.sort_values(by=['Vehicle No', 'Collection Date'])
+
+        # Calculate distance for each vehicle separately
+        df['Distance'] = df.groupby('Vehicle No')['Meter Reading'].diff().fillna(0)
 
         # Replace negative distances with the average of positive distances
         positive_avg_distance = df[df['Distance'] > 0]['Distance'].mean()
