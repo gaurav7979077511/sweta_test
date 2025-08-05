@@ -164,7 +164,7 @@ else:
         df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce').dt.date
         df['Amount Used'] = pd.to_numeric(df['Amount Used'], errors='coerce')
         df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
-        return df[['Date', 'Vehicle No', 'Reason of Expense', 'Amount Used', 'Any Bill', 'Month-Year','Expense By']]
+        return df[['Date', 'Vehicle No', 'Reason of Expense', 'Amount Used', 'Any Bill', 'Month-Year']]
     
     @st.cache_data(ttl=300)  # Cache for 5 minutes    
     def load_investment_data(url):
@@ -189,7 +189,7 @@ else:
         df['Investment Amount'] = pd.to_numeric(df['Investment Amount'], errors='coerce')
         df['Month-Year'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
 
-        return df[['Date', 'Investment Type', 'Investment Amount', 'Comment', 'Investor Name', 'Month-Year','Received From']]
+        return df[['Date', 'Investment Type', 'Investment Amount', 'Comment', 'Investor Name', 'Month-Year']]
 
     @st.cache_data(ttl=300)
     def load_bank_data(url):
