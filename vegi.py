@@ -288,6 +288,15 @@ else:
         # Get latest month
         last_month = df['Month-Year'].max()
 
+        print("df columns:", df.columns.tolist())
+        print("expense_df columns:", expense_df.columns.tolist())
+        print("investment_df columns:", investment_df.columns.tolist())
+
+        # Optional: Clean column names in case of leading/trailing spaces
+        df.columns = df.columns.str.strip()
+        expense_df.columns = expense_df.columns.str.strip()
+        investment_df.columns = investment_df.columns.str.strip()
+        
         # === Individual Totals (Govind Kumar) ===
         govind_total_collection = df[df['Received By'].isin(['Govind Kumar'])]['Amount'].sum()
         govind_total_investment = investment_df[investment_df['Received From'].isin(['Govind Kumar'])]['Investment Amount'].sum()
