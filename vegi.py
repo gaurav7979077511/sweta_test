@@ -316,8 +316,8 @@ else:
 
         st.write(gaurav_total_collection , gaurav_total_expense , gaurav_collection_credit, gaurav_settlement_debit, gaurav_settlement_credit , gaurav_total_investment)
         st.write(govind_total_collection , govind_total_expense , govind_collection_credit, govind_settlement_debit, govind_settlement_credit , govind_total_investment)
-        remaining_fund_gaurav= gaurav_total_collection - gaurav_total_expense - gaurav_collection_credit + gaurav_settlement_debit - gaurav_settlement_credit - gaurav_total_investment
-        remaining_fund_govind= govind_total_collection - govind_total_expense - govind_collection_credit + govind_settlement_debit - govind_settlement_credit - govind_total_investment
+        remaining_fund_gaurav= (gaurav_total_collection - gaurav_total_expense - gaurav_collection_credit + gaurav_settlement_debit - gaurav_settlement_credit - gaurav_total_investment)
+        remaining_fund_govind= (govind_total_collection - govind_total_expense - govind_collection_credit + govind_settlement_debit - govind_settlement_credit - govind_total_investment)
         Net_balance=remaining_fund_gaurav + remaining_fund_govind + bank_balance
 
         last_month_collection = govind_last_month_collection + gaurav_last_month_collection
