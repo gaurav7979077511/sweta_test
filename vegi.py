@@ -288,30 +288,29 @@ else:
         # Get latest month
         last_month = df['Month-Year'].max()
 
-        # Initialize individual variables
-        govind_total_collection = df[df['Received By'] == 'Govind Kumar']['Amount'].sum()
-        gaurav_total_collection = df[df['Received By'] == 'Kumar Gaurav']['Amount'].sum()
+        # === Individual Totals (Govind Kumar) ===
+        govind_total_collection = df[df['Received By'].isin(['Govind Kumar'])]['Amount'].sum()
+        govind_total_investment = investment_df[investment_df['Received From'].isin(['Govind Kumar'])]['Investment Amount'].sum()
+        govind_total_expense = expense_df[expense_df['Expense By'].isin(['Govind Kumar'])]['Amount Used'].sum()
 
-        govind_total_investment = investment_df[investment_df['Received From'] == 'Govind Kumar']['Investment Amount'].sum()
-        gaurav_total_investment = investment_df[investment_df['Received From'] == 'Kumar Gaurav']['Investment Amount'].sum()
+        govind_last_month_collection = df[(df['Received By'].isin(['Govind Kumar'])) & (df['Month-Year'] == last_month)]['Amount'].sum()
+        govind_last_month_expense = expense_df[(expense_df['Expense By'].isin(['Govind Kumar'])) & (expense_df['Month-Year'] == last_month)]['Amount Used'].sum()
 
-        govind_total_expense = expense_df[expense_df['Expense By'] == 'Govind Kumar']['Amount Used'].sum()
-        gaurav_total_expense = expense_df[expense_df['Expense By'] == 'Kumar Gaurav']['Amount Used'].sum()
+        # === Individual Totals (Kumar Gaurav) ===
+        gaurav_total_collection = df[df['Received By'].isin(['Kumar Gaurav'])]['Amount'].sum()
+        gaurav_total_investment = investment_df[investment_df['Received From'].isin(['Kumar Gaurav'])]['Investment Amount'].sum()
+        gaurav_total_expense = expense_df[expense_df['Expense By'].isin(['Kumar Gaurav'])]['Amount Used'].sum()
 
-        govind_last_month_collection = df[(df['Received By'] == 'Govind Kumar') & (df['Month-Year'] == last_month)]['Amount'].sum()
-        gaurav_last_month_collection = df[(df['Received By'] == 'Kumar Gaurav') & (df['Month-Year'] == last_month)]['Amount'].sum()
+        gaurav_last_month_collection = df[(df['Received By'].isin(['Kumar Gaurav'])) & (df['Month-Year'] == last_month)]['Amount'].sum()
+        gaurav_last_month_expense = expense_df[(expense_df['Expense By'].isin(['Kumar Gaurav'])) & (expense_df['Month-Year'] == last_month)]['Amount Used'].sum()
 
-        govind_last_month_expense = expense_df[(expense_df['Expense By'] == 'Govind Kumar') & (expense_df['Month-Year'] == last_month)]['Amount Used'].sum()
-        gaurav_last_month_expense = expense_df[(expense_df['Expense By'] == 'Kumar Gaurav') & (expense_df['Month-Year'] == last_month)]['Amount Used'].sum()
-
-        # Combined totals
+        # === Combined Totals ===
         total_collection = govind_total_collection + gaurav_total_collection
         total_investment = govind_total_investment + gaurav_total_investment
         total_expense = govind_total_expense + gaurav_total_expense
 
         remaining_fund = total_collection + total_investment - total_expense
 
-        # Combined last month totals
         last_month_collection = govind_last_month_collection + gaurav_last_month_collection
         last_month_expense = govind_last_month_expense + gaurav_last_month_expense
 
