@@ -561,30 +561,28 @@ else:
         col2.metric("🏦 From Bank", f"₹{bank_investment_df['Investment Amount'].sum():,.2f}")
         col3.metric("💰 Total Investment", f"₹{total_combined_investment:,.2f}")
     
-        st.markdown("---")
-    
-        # --- Pie Chart: Source of Investment ---
-        st.subheader("📊 Investment by Source")
-        source_summary = full_investment_df.groupby("Source", as_index=False)["Investment Amount"].sum()
-    
-        fig1, ax1 = plt.subplots()
-        ax1.pie(source_summary["Investment Amount"], labels=source_summary["Source"], autopct="%1.1f%%", startangle=90)
-        ax1.axis("equal")
-        st.pyplot(fig1)
     
         st.markdown("---")
     
-        # --- Investment by Person (Combined) ---
-        st.subheader("👤 Investment by Investor")
-        investor_summary = full_investment_df.groupby("Investor Name", as_index=False)["Investment Amount"].sum()
-        st.bar_chart(investor_summary.set_index("Investor Name"))
+         # --- 📊 Pie Chart: Govind vs Gaurav ---
+        st.subheader("👥 Investment Share (Govind vs Gaurav)")
+
+        pie_df = full_investment_df[full_investment_df["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])]
+        investor_totals = pie_df.groupby("Investor Name", as_index=False)["Investment Amount"].sum()
     
-        st.markdown("---")
-    
-        # --- Monthly Investment Trend ---
-        st.subheader("📆 Monthly Investment Trend")
-        monthly_summary = full_investment_df.groupby("Month-Year", as_index=False)["Investment Amount"].sum()
-        st.line_chart(monthly_summary.set_index("Month-Year"))
+        if not investor_totals.empty:
+            fig, ax = plt.subplots(figsize=(4, 4))
+            ax.pie(
+                investor_totals["Investment Amount"],
+                labels=investor_totals["Investor Name"],
+                autopct='%1.1f%%',
+                startangle=90,
+                colors=plt.cm.Set3.colors
+            )
+            ax.axis("equal")
+            st.pyplot(fig)
+        else:
+            st.info("No investment data available for Govind or Gaurav.")
     
         st.markdown("---")
     
