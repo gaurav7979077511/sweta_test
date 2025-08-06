@@ -602,23 +602,19 @@ else:
         st.title("📊 Collection Data")
     
         # Ensure date column is in datetime format
-        df["Collection Date"] = pd.to_datetime(df["Collection Date"])
+        df["Collection Date"] = pd.to_datetime(df["Collection Date"], errors='coerce')
     
-        # Sort by Collection Date DESC
+        # Sort by Collection Date descending
         df = df.sort_values("Collection Date", ascending=False)
     
         # Calculate previous amount for same vehicle
-        df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(-1)  # reverse due to DESC
+        df = df.sort_values(["Vehicle No", "Collection Date"])
+        df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(1)
+    
+        # Calculate difference
         df["Change"] = df["Amount"] - df["Previous Amount"]
     
-        # --- Vehicle Filter ---
-        vehicle_list = ["All"] + sorted(df["Vehicle No"].dropna().unique())
-        selected_vehicle = st.selectbox("🚐 Filter by Vehicle No:", vehicle_list)
-    
-        if selected_vehicle != "All":
-            df = df[df["Vehicle No"] == selected_vehicle]
-    
-        # --- KPI Metrics ---
+        # --- KPI Metrics (UNFILTERED, full data) ---
         total_collection = df["Amount"].sum()
         total_vehicles = df["Vehicle No"].nunique()
         best_vehicle = df.groupby("Vehicle No")["Amount"].mean().idxmax()
@@ -634,22 +630,35 @@ else:
     
         st.markdown("---")
     
-        # --- Collection Trend Chart ---
-        st.subheader("📈 Collection Trend (All Vehicles)")
-    
+        # --- Chart: Trend Line for All Vehicles ---
+        st.subheader("📈 Collection Trend per Vehicle")
         trend_df = df.groupby(["Collection Date", "Vehicle No"])["Amount"].sum().reset_index()
-        pivot_df = trend_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
-        st.line_chart(pivot_df)
+        chart_df = trend_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
+        st.line_chart(chart_df, use_container_width=True)
     
         st.markdown("---")
     
-        # --- Prepare dataframe to show ---
-        columns_to_show = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance", "Previous Amount", "Change"]
-        display_df = df[columns_to_show].copy()
+        # --- Filter: Vehicle No ---
+        vehicle_list = ["All"] + sorted(df["Vehicle No"].dropna().unique())
+        selected_vehicle = st.selectbox("🚐 Filter by Vehicle No:", vehicle_list)
+    
+        # --- Apply Filter ---
+        if selected_vehicle != "All":
+            filtered_df = df[df["Vehicle No"] == selected_vehicle].copy()
+            selected_vehicle_total = filtered_df["Amount"].sum()
+            st.info(f"📦 **Total Collection for `{selected_vehicle}`: ₹{selected_vehicle_total:,.2f}**")
+        else:
+            filtered_df = df.copy()
+    
+        st.markdown("---")
+    
+        # --- Columns to Display ---
+        display_cols = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance"]
+        filtered_df = filtered_df[display_cols]
     
         # --- Color Highlighting Function ---
         def highlight_amount(row):
-            if pd.isna(row["Previous Amount"]):
+            if pd.isna(row.get("Previous Amount")):
                 return ""
             elif row["Amount"] > row["Previous Amount"]:
                 return "color: green; font-weight: bold"
@@ -658,15 +667,20 @@ else:
             else:
                 return ""
     
-        # Apply highlight only to Amount column
-        styled_df = display_df.style.apply(
+        # Re-merge Previous Amount for color styling
+        style_df = df[["Collection Date", "Vehicle No", "Amount", "Previous Amount"]]
+        merged_df = pd.merge(filtered_df, style_df, on=["Collection Date", "Vehicle No", "Amount"], how="left")
+    
+        # Styled DataFrame
+        styled_df = merged_df[filtered_df.columns].style.apply(
             lambda row: [
-                highlight_amount(row) if col == "Amount" else ""
+                highlight_amount(row) if col == "Amount" else "" 
                 for col in row.index
             ],
             axis=1
         )
     
+        # --- Final Table ---
         st.subheader("📄 Collection Records")
         st.dataframe(styled_df, use_container_width=True)
 
