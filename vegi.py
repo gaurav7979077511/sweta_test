@@ -699,64 +699,62 @@ else:
     
         # Ensure 'Date' is datetime
         bank_df["Date"] = pd.to_datetime(bank_df["Date"], dayfirst=True)
-    
-        # Normalize whitespace and case
         bank_df["Transaction Type"] = bank_df["Transaction Type"].str.strip()
-    
-        # Create filters
         bank_df["Month"] = bank_df["Date"].dt.strftime("%B %Y")
-        bank_df["Year"] = bank_df["Date"].dt.year
     
-        unique_months = bank_df["Month"].unique().tolist()
-        unique_months.sort(key=lambda x: pd.to_datetime(x, format="%B %Y"), reverse=True)
+        # 🔒 Keep original for current balance calculation
+        full_df = bank_df.copy()
     
-        st.sidebar.subheader("📅 Filter Transactions")
-        filter_option = st.sidebar.selectbox(
-            "View by:",
-            ["All", "Last 3 Months", "Specific Month"]
-        )
+        # Calculate total credit/debit from full data (not filtered)
+        credit_mask_full = full_df["Transaction Type"].str.lower().str.contains("credit")
+        debit_mask_full = full_df["Transaction Type"].str.lower().str.contains("debit")
     
-        filtered_df = bank_df.copy()
-    
-        if filter_option == "Last 3 Months":
-            latest_date = bank_df["Date"].max()
-            three_months_ago = latest_date - pd.DateOffset(months=3)
-            filtered_df = bank_df[bank_df["Date"] >= three_months_ago]
-    
-        elif filter_option == "Specific Month":
-            selected_month = st.sidebar.selectbox("Choose Month", unique_months)
-            filtered_df = bank_df[bank_df["Month"] == selected_month]
-    
-        # Credit/Debit calculation
-        credit_mask = filtered_df["Transaction Type"].str.lower().str.contains("credit")
-        debit_mask = filtered_df["Transaction Type"].str.lower().str.contains("debit")
-    
-        total_credit = filtered_df.loc[credit_mask, "Amount"].sum()
-        total_debit = filtered_df.loc[debit_mask, "Amount"].sum()
+        total_credit = full_df.loc[credit_mask_full, "Amount"].sum()
+        total_debit = full_df.loc[debit_mask_full, "Amount"].sum()
         balance = total_credit - total_debit
     
-        # 💰 Current Balance
+        # 📌 Filter Section
+        st.subheader("📅 Filter Transactions")
+        filter_option = st.selectbox("Choose filter type:", ["All", "Last 3 Months", "Select Month-Year"])
+    
+        today = pd.Timestamp.today()
+        if filter_option == "All":
+            filtered_df = bank_df
+        elif filter_option == "Last 3 Months":
+            last_3_months = today - pd.DateOffset(months=3)
+            filtered_df = bank_df[bank_df["Date"] >= last_3_months]
+        elif filter_option == "Select Month-Year":
+            selected_month = st.selectbox("Select Month-Year:", sorted(bank_df["Month"].unique(), reverse=True))
+            filtered_df = bank_df[bank_df["Month"] == selected_month]
+    
+        # 💰 Current Balance (Always from full data)
         st.subheader("💰 Current Bank Balance")
         st.metric(label="Available Balance", value=f"₹ {balance:,.2f}", delta=f"₹ {total_credit - total_debit:,.2f}")
     
-        # 📊 Monthly Summary
-        st.subheader("📊 Monthly Transaction Summary")
+        # 📌 Closing Balance of Filtered Data
+        st.subheader("📉 Closing Balance for Selected Period")
+        credit_mask = filtered_df["Transaction Type"].str.lower().str.contains("credit")
+        debit_mask = filtered_df["Transaction Type"].str.lower().str.contains("debit")
+        closing_credit = filtered_df.loc[credit_mask, "Amount"].sum()
+        closing_debit = filtered_df.loc[debit_mask, "Amount"].sum()
+        closing_balance = closing_credit - closing_debit
+        st.metric(label="Closing Balance (Filtered)", value=f"₹ {closing_balance:,.2f}")
     
+        # 📊 Monthly Summary (From filtered data)
+        st.subheader("📊 Monthly Transaction Summary")
         monthly_summary = (
             filtered_df.groupby(["Month", "Transaction Type"])["Amount"]
             .sum()
             .unstack(fill_value=0)
             .reset_index()
         )
-        st.dataframe(monthly_summary, use_container_width=True)
+        st.dataframe(monthly_summary)
     
         # 📋 Full Transaction Log
         st.subheader("📋 Full Bank Transaction Log")
     
-        # Prepare DataFrame
         display_df = filtered_df[["Date", "Transaction By", "Transaction Type", "Reason", "Amount", "Bill"]].copy()
     
-        # Format Amount with + / - and apply color
         def format_amount(row):
             amt = row["Amount"]
             if "credit" in row["Transaction Type"].lower():
@@ -765,9 +763,8 @@ else:
                 return f"-₹{amt:,.2f}"
             return f"₹{amt:,.2f}"
     
-        display_df["Formatted Amount"] = display_df.apply(format_amount, axis=1)
+        display_df["Formatted Amount"] = filtered_df.apply(format_amount, axis=1)
     
-        # Style Amount column with color
         def color_amount(val):
             if isinstance(val, str):
                 if val.startswith("+"):
@@ -778,15 +775,12 @@ else:
     
         styled = display_df[["Date", "Transaction By", "Transaction Type", "Reason", "Formatted Amount", "Bill"]].sort_values(by="Date", ascending=False)
         styled_df = styled.style.applymap(color_amount, subset=["Formatted Amount"])
-    
         st.dataframe(styled_df, use_container_width=True)
     
-        # ⬇️ Export Button
-        st.subheader("📥 Export Transactions")
-        csv = display_df.to_csv(index=False).encode("utf-8")
+        # ⬇️ Export Filtered Data
         st.download_button(
-            label="📤 Download Filtered Data as CSV",
-            data=csv,
+            label="📥 Download Filtered Transactions as CSV",
+            data=filtered_df.to_csv(index=False),
             file_name="filtered_bank_transactions.csv",
             mime="text/csv"
         )
