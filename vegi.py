@@ -521,53 +521,77 @@ else:
 
     elif page == "Investment":
         st.title("📈 Investment Details")
+    
+        # --- 1. From Investment Sheet ---
+        sheet_total_investment = investment_df["Investment Amount"].sum()
+    
+        # --- 2. From Bank Transactions ---
+        bank_investment_df = bank_df[bank_df["Transaction Type"] == "Investment_Credit"].copy()
+    
+        # Rename for consistency
+        bank_investment_df.rename(columns={
+            "Transaction By": "Investor Name",
+            "Amount": "Investment Amount",
+            "Reason": "Comment"
+        }, inplace=True)
+    
+        # Optional: add "Source" column
+        investment_df["Source"] = "Manual Sheet"
+        bank_investment_df["Source"] = "Bank Transaction"
+    
+        # Keep only relevant columns
+        investment_df_clean = investment_df[["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]]
+        bank_investment_df_clean = bank_investment_df[["Date", "Investor Name", "Investment Amount", "Comment", "Source"]]
+    
+        # Fill missing columns to match
+        bank_investment_df_clean["Investment Type"] = "Bank Credit"
+        bank_investment_df_clean["Month-Year"] = pd.to_datetime(bank_investment_df_clean["Date"]).dt.strftime('%Y-%m')
+    
+        # Reorder columns
+        bank_investment_df_clean = bank_investment_df_clean[["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]]
+    
+        # --- Combine both sources ---
+        full_investment_df = pd.concat([investment_df_clean, bank_investment_df_clean], ignore_index=True)
+    
+        # --- Total Summary ---
+        total_combined_investment = full_investment_df["Investment Amount"].sum()
+    
+        col1, col2, col3 = st.columns(3)
+        col1.metric("📄 From Sheet", f"₹{sheet_total_investment:,.2f}")
+        col2.metric("🏦 From Bank", f"₹{bank_investment_df['Investment Amount'].sum():,.2f}")
+        col3.metric("💰 Total Investment", f"₹{total_combined_investment:,.2f}")
+    
+        st.markdown("---")
+    
+        # --- Pie Chart: Source of Investment ---
+        st.subheader("📊 Investment by Source")
+        source_summary = full_investment_df.groupby("Source", as_index=False)["Investment Amount"].sum()
+    
+        fig1, ax1 = plt.subplots()
+        ax1.pie(source_summary["Investment Amount"], labels=source_summary["Source"], autopct="%1.1f%%", startangle=90)
+        ax1.axis("equal")
+        st.pyplot(fig1)
+    
+        st.markdown("---")
+    
+        # --- Investment by Person (Combined) ---
+        st.subheader("👤 Investment by Investor")
+        investor_summary = full_investment_df.groupby("Investor Name", as_index=False)["Investment Amount"].sum()
+        st.bar_chart(investor_summary.set_index("Investor Name"))
+    
+        st.markdown("---")
+    
+        # --- Monthly Investment Trend ---
+        st.subheader("📆 Monthly Investment Trend")
+        monthly_summary = full_investment_df.groupby("Month-Year", as_index=False)["Investment Amount"].sum()
+        st.line_chart(monthly_summary.set_index("Month-Year"))
+    
+        st.markdown("---")
+    
+        # --- Detailed View ---
+        st.subheader("📋 All Investment Records")
+        st.dataframe(full_investment_df.sort_values(by="Date", ascending=False))
 
-        # Group investment data by investor
-        investment_summary = investment_df.groupby('Investor Name', as_index=False)['Investment Amount'].sum()
-
-        # Group investment data by Month-Year
-        monthly_investment = investment_df.groupby('Month-Year', as_index=False)['Investment Amount'].sum()
-
-        # Group investment data by Investment Type
-        investment_type_summary = investment_df.groupby('Investment Type', as_index=False)['Investment Amount'].sum()
-
-        # --- ARRANGE PIE CHARTS SIDE BY SIDE ---
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.write("### 🎯 Investment by Investor")
-            fig1, ax1 = plt.subplots(figsize=(3.5, 3.5))  # Smaller size
-            ax1.pie(
-                investment_summary['Investment Amount'], 
-                labels=investment_summary['Investor Name'], 
-                autopct='%1.1f%%', 
-                startangle=90, 
-                colors=plt.cm.Paired.colors
-            )
-            ax1.axis("equal")  # Keep it circular
-            st.pyplot(fig1)
-
-        with col2:
-            st.write("### 💰 Investment by Type")
-            fig2, ax2 = plt.subplots(figsize=(3.5, 3.5))  # Same size as investor pie
-            ax2.pie(
-                investment_type_summary['Investment Amount'], 
-                labels=investment_type_summary['Investment Type'], 
-                autopct='%1.1f%%', 
-                startangle=90, 
-                colors=plt.cm.Set3.colors, 
-                wedgeprops=dict(width=0.4)  # Donut chart effect
-            )
-            ax2.axis("equal")
-            st.pyplot(fig2)
-
-        # --- SMALLER BAR CHART FOR MONTHLY INVESTMENT ---
-        st.write("### 📊 Monthly Investment Trend")
-        st.bar_chart(monthly_investment.set_index("Month-Year"), use_container_width=True, height=200)
-
-        # --- DISPLAY DETAILED DATA ---
-        st.write("### 🔍 Detailed Investment Data")
-        st.dataframe(investment_df.sort_values(by="Date", ascending=False))
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
