@@ -713,6 +713,9 @@ else:
         total_credit = bank_df.loc[credit_mask, "Amount"].sum()
         total_debit = bank_df.loc[debit_mask, "Amount"].sum()
         balance = total_credit - total_debit
+
+        st.write("total_credit",total_credit)
+        st.write("total_debit",total_debit)
     
         # 💰 Current Balance
         st.subheader("💰 Current Bank Balance")
