@@ -675,7 +675,9 @@ else:
     
         # Prepare merged dataframe with Previous Amount (needed for color logic)
         merged_df = filtered_df.copy()
-        styled_df = merged_df[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
+        #styled_df = merged_df[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
+        styled_df = merged_df.sort_values("Collection Date", ascending=False)[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
+
     
         # Format currency and distance
         styled_df = styled_df.format({
