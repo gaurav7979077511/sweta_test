@@ -673,8 +673,8 @@ else:
     
         display_cols = [col for col in filtered_df.columns if col not in ["Previous Amount", "Change"]]
     
-        styled_df = merged_df[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
-        styled_df = styled_df.hide_columns(["Previous Amount"])  # Hide Previous Amount in table
+        styled_df = merged_df[display_cols].style.apply(style_row, axis=1)
+
     
         st.subheader("📄 Collection Records")
         st.dataframe(styled_df, use_container_width=True)
