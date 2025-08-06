@@ -480,6 +480,16 @@ else:
     elif page == "Expenses":
         st.title("💸 Expense Insights")
 
+        # Add Investment Button (Top Right)
+        col1, col2 = st.columns([6, 1])
+        with col2:
+            st.markdown(
+                f'<a href="https://forms.gle/y1F2diJeG6WBfTmu9" target="_blank">'
+                f'<button style="background-color:#4CAF50; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">➕ Add Expenses</button>'
+                f'</a>',
+                unsafe_allow_html=True
+            )
+
         # ───────────────────────────────────────────────────────────────
         # 🔹 Section 1: Total Expense Summary
         total_manual_expense = expense_df["Amount Used"].sum()
@@ -518,6 +528,16 @@ else:
     
     elif page == "Investment":
         st.title("📈 Investment Details")
+
+        # Add Investment Button (Top Right)
+        col1, col2 = st.columns([6, 1])
+        with col2:
+            st.markdown(
+                f'<a href="https://forms.gle/tse55G9Mp6CBqSmT9" target="_blank">'
+                f'<button style="background-color:#4CAF50; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">➕ Add Investment</button>'
+                f'</a>',
+                unsafe_allow_html=True
+            )
     
         # --- 1. From Investment Sheet ---
         sheet_total_investment = investment_df["Investment Amount"].sum()
@@ -601,6 +621,16 @@ else:
     
     elif page == "Collection Data":
         st.title("📊 Collection Data")
+
+        # Add Collection Button (Top Right)
+        col1, col2 = st.columns([6, 1])
+        with col2:
+            st.markdown(
+                f'<a href="https://forms.gle/ZyvCBLFaPC1szPGd7" target="_blank">'
+                f'<button style="background-color:#4CAF50; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">➕ Add Collection</button>'
+                f'</a>',
+                unsafe_allow_html=True
+            )
     
         # Ensure date column is in datetime format
         df["Collection Date"] = pd.to_datetime(df["Collection Date"])
@@ -701,7 +731,7 @@ else:
         col1, col2 = st.columns([6, 1])
         with col2:
             st.markdown(
-                f'<a href="https://forms.gle/Eq8eZdobWKX5aU84A" target="_blank">'
+                f'<a href="https://forms.gle/JwXMNkREnjeqAfNPA" target="_blank">'
                 f'<button style="background-color:#4CAF50; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">➕ Add Bank Transaction</button>'
                 f'</a>',
                 unsafe_allow_html=True
