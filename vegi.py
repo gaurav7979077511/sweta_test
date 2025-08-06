@@ -535,61 +535,71 @@ else:
             "Reason": "Comment"
         }, inplace=True)
     
-        # Optional: add "Source" column
+        # Add Source column
         investment_df["Source"] = "Manual Sheet"
         bank_investment_df["Source"] = "Bank Transaction"
     
-        # Keep only relevant columns
-        investment_df_clean = investment_df[["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]]
-        bank_investment_df_clean = bank_investment_df[["Date", "Investor Name", "Investment Amount", "Comment", "Source"]]
+        # Clean both dataframes
+        investment_df_clean = investment_df[[
+            "Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"
+        ]]
     
-        # Fill missing columns to match
+        bank_investment_df_clean = bank_investment_df[[
+            "Date", "Investor Name", "Investment Amount", "Comment", "Source"
+        ]]
         bank_investment_df_clean["Investment Type"] = "Bank Credit"
         bank_investment_df_clean["Month-Year"] = pd.to_datetime(bank_investment_df_clean["Date"]).dt.strftime('%Y-%m')
+        bank_investment_df_clean = bank_investment_df_clean[[
+            "Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"
+        ]]
     
-        # Reorder columns
-        bank_investment_df_clean = bank_investment_df_clean[["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]]
-    
-        # --- Combine both sources ---
+        # --- Combine both ---
         full_investment_df = pd.concat([investment_df_clean, bank_investment_df_clean], ignore_index=True)
-    
-        # --- Total Summary ---
         total_combined_investment = full_investment_df["Investment Amount"].sum()
     
+        # --- Metric Summary ---
         col1, col2, col3 = st.columns(3)
         col1.metric("📄 From Sheet", f"₹{sheet_total_investment:,.2f}")
         col2.metric("🏦 From Bank", f"₹{bank_investment_df['Investment Amount'].sum():,.2f}")
         col3.metric("💰 Total Investment", f"₹{total_combined_investment:,.2f}")
     
-    
         st.markdown("---")
     
-         # --- 📊 Pie Chart: Govind vs Gaurav ---
+        # --- 👥 Pie Chart: Govind vs Gaurav ---
         st.subheader("👥 Investment Share (Govind vs Gaurav)")
-
+    
         pie_df = full_investment_df[full_investment_df["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])]
         investor_totals = pie_df.groupby("Investor Name", as_index=False)["Investment Amount"].sum()
     
-        if not investor_totals.empty:
-            fig, ax = plt.subplots(figsize=(4, 4))
-            ax.pie(
-                investor_totals["Investment Amount"],
-                labels=investor_totals["Investor Name"],
-                autopct='%1.1f%%',
-                startangle=90,
-                colors=plt.cm.Set3.colors
-            )
-            ax.axis("equal")
-            st.pyplot(fig)
-        else:
-            st.info("No investment data available for Govind or Gaurav.")
+        col1, col2 = st.columns([1, 3])  # Small left column for pie, right for bar
+    
+        with col1:
+            if not investor_totals.empty:
+                fig, ax = plt.subplots(figsize=(3, 3))  # smaller pie chart
+                ax.pie(
+                    investor_totals["Investment Amount"],
+                    labels=investor_totals["Investor Name"],
+                    autopct='%1.1f%%',
+                    startangle=90,
+                    colors=plt.cm.Set2.colors
+                )
+                ax.axis("equal")
+                st.pyplot(fig)
+            else:
+                st.info("No investment data for Govind or Gaurav.")
+    
+        # --- 📊 Manual vs Bank Investment by Investor ---
+        with col2:
+            st.write("### 🧾 Manual vs Bank Investment by Investor")
+    
+            investment_split_df = full_investment_df.groupby(["Investor Name", "Source"])["Investment Amount"].sum().unstack().fillna(0)
+            st.bar_chart(investment_split_df)
     
         st.markdown("---")
     
-        # --- Detailed View ---
+        # --- 📋 All Records ---
         st.subheader("📋 All Investment Records")
-        st.dataframe(full_investment_df.sort_values(by="Date", ascending=False))
-
+        st.dataframe(full_investment_df.sort_values(by="Date", ascending=False), use_container_width=True)
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
