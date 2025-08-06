@@ -603,50 +603,63 @@ else:
     
         # Ensure date column is in datetime format
         df["Collection Date"] = pd.to_datetime(df["Collection Date"])
-        
-        # Sort data by Collection Date DESC
+    
+        # Sort by Collection Date DESC
         df = df.sort_values("Collection Date", ascending=False)
     
-        # Total collection
-        total_collection = df["Amount"].sum()
+        # Calculate previous amount for same vehicle
+        df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(-1)  # reverse due to DESC
+        df["Change"] = df["Amount"] - df["Previous Amount"]
     
-        # Filter by vehicle number
+        # --- Vehicle Filter ---
         vehicle_list = ["All"] + sorted(df["Vehicle No"].dropna().unique())
         selected_vehicle = st.selectbox("🚐 Filter by Vehicle No:", vehicle_list)
     
         if selected_vehicle != "All":
-            filtered_df = df[df["Vehicle No"] == selected_vehicle]
-        else:
-            filtered_df = df
+            df = df[df["Vehicle No"] == selected_vehicle]
     
-        # --- Line chart for vehicle trends ---
-        st.subheader("📈 Vehicle-wise Collection Trend")
+        # --- KPI Metrics ---
+        total_collection = df["Amount"].sum()
+        total_vehicles = df["Vehicle No"].nunique()
+        best_vehicle = df.groupby("Vehicle No")["Amount"].mean().idxmax()
+        worst_vehicle = df.groupby("Vehicle No")["Amount"].mean().idxmin()
+        total_records = len(df)
     
-        trend_df = (
-            filtered_df.groupby(["Collection Date", "Vehicle No"])["Amount"]
-            .sum()
-            .reset_index()
-        )
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("💰 Total Collection", f"₹{total_collection:,.2f}")
+        col2.metric("🚐 Total Vehicles", total_vehicles)
+        col3.metric("🏆 Best Vehicle", best_vehicle)
+        col4.metric("📉 Worst Vehicle", worst_vehicle)
+        col5.metric("📄 Total Records", total_records)
     
+        st.markdown("---")
+    
+        # --- Collection Trend Chart ---
+        st.subheader("📈 Collection Trend (All Vehicles)")
+    
+        trend_df = df.groupby(["Collection Date", "Vehicle No"])["Amount"].sum().reset_index()
         pivot_df = trend_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
         st.line_chart(pivot_df)
     
         st.markdown("---")
     
-        # Show total collection
-        st.metric("💰 Total Collection", f"₹{filtered_df['Amount'].sum():,.2f}")
-    
-        st.markdown("---")
-    
         # --- Prepare dataframe to show ---
-        columns_to_show = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance"]
-        show_df = filtered_df[columns_to_show].copy()
+        columns_to_show = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance", "Previous Amount", "Change"]
+        display_df = df[columns_to_show].copy()
     
-        # Highlighting changes (optional, can be skipped here if not needed)
+        # --- Color Highlighting Function ---
         def highlight_amount(row):
-            return "color: green; font-weight: bold" if row["Amount"] > 0 else ""
+            if pd.isna(row["Previous Amount"]):
+                return ""
+            elif row["Amount"] > row["Previous Amount"]:
+                return "color: green; font-weight: bold"
+            elif row["Amount"] < row["Previous Amount"]:
+                return "color: red; font-weight: bold"
+            else:
+                return ""
     
-        styled_df = show_df.style.apply(
+        # Apply highlight only to Amount column
+        styled_df = display_df.style.apply(
             lambda row: [
                 highlight_amount(row) if col == "Amount" else ""
                 for col in row.index
@@ -654,8 +667,9 @@ else:
             axis=1
         )
     
-        st.subheader("📋 Collection Records")
+        st.subheader("📄 Collection Records")
         st.dataframe(styled_df, use_container_width=True)
+
 
 
     elif page == "Bank Transaction":
