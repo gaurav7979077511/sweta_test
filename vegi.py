@@ -680,10 +680,11 @@ else:
 
     
         # Format currency and distance
-        styled_df = styled_df.format({
-            "Amount": "₹{:.2f}",
-            "Distance": "{:.2f}"
-        })
+        styled_df = styled_df.data.iloc[:, :-1].style.format({
+        "Amount": "₹{:,.0f}",
+        "Distance": "{:,.0f}"
+    })
+
     
         # Show styled dataframe
         st.dataframe(styled_df, use_container_width=True)
