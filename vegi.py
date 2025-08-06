@@ -705,17 +705,13 @@ else:
     
         credit_mask = bank_df["Transaction Type"].str.lower().str.contains("credit")
         debit_mask = bank_df["Transaction Type"].str.lower().str.contains("debit")
-        st.write("credit_mask",credit_mask)
-        st.write("debit_mask",debit_mask)
-        st.write("Columns:", bank_df.columns.tolist())
+
 
     
         total_credit = bank_df.loc[credit_mask, "Amount"].sum()
         total_debit = bank_df.loc[debit_mask, "Amount"].sum()
         balance = total_credit - total_debit
 
-        st.write("total_credit",total_credit)
-        st.write("total_debit",total_debit)
     
         # 💰 Current Balance
         st.subheader("💰 Current Bank Balance")
