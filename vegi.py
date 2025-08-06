@@ -511,27 +511,12 @@ else:
     
         # ───────────────────────────────────────────────────────────────
         # 🔹 Section 3: Manually Entered Expenses
-        st.subheader("🧾 Manual Expense Summary (from Sheet)")
+        st.subheader("🧾 Manual Expense Summary")
     
         # Monthly manual expenses
         monthly_manual_expense = expense_df.groupby("Month-Year", as_index=False)['Amount Used'].sum()
         st.bar_chart(monthly_manual_expense.set_index("Month-Year"))
     
-        # Expense by person (pie)
-        person_expense = expense_df.groupby("Expense By", as_index=False)["Amount Used"].sum()
-    
-        col1, col2 = st.columns(2)
-    
-        with col1:
-            st.write("### 👤 Expense by Person (Manual)")
-            fig1, ax1 = plt.subplots()
-            ax1.pie(person_expense["Amount Used"], labels=person_expense["Expense By"], autopct="%1.1f%%", startangle=90)
-            ax1.axis("equal")
-            st.pyplot(fig1)
-    
-        with col2:
-            st.write("### 📈 Monthly Manual Expenses")
-            st.line_chart(monthly_manual_expense.set_index("Month-Year"))
     
         st.markdown("---")
     
