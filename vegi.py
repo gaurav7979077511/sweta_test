@@ -696,18 +696,50 @@ else:
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
-
-        # Show current balance placeholder
-        st.subheader("💰 Current Bank Balance")
-        st.write("Calculating...")
-
-        # Grouped by Month-Year
+    
+        # Ensure 'Date' column is datetime
+        bank_df["Date"] = pd.to_datetime(bank_df["Date"])
+    
+        # Compute Current Balance
+        total_credit = bank_df.loc[bank_df["Type"].str.lower() == "credit", "Amount"].sum()
+        total_debit = bank_df.loc[bank_df["Type"].str.lower() == "debit", "Amount"].sum()
+        current_balance = total_credit - total_debit
+    
+        # KPIs
+        col1, col2, col3 = st.columns(3)
+        col1.metric("⬆️ Total Credit", f"₹{total_credit:,.2f}")
+        col2.metric("⬇️ Total Debit", f"₹{total_debit:,.2f}")
+        col3.metric("💰 Current Balance", f"₹{current_balance:,.2f}")
+    
+        st.markdown("---")
+    
+        # Monthly summary
         st.subheader("📊 Monthly Transaction Summary")
-        st.write("This will show total credit/debit by type.")
-
-        # Show full transaction log
+    
+        bank_df["Month"] = bank_df["Date"].dt.to_period("M").astype(str)
+        monthly_summary = bank_df.groupby(["Month", "Type"])["Amount"].sum().unstack().fillna(0)
+        st.dataframe(monthly_summary.style.format("₹{:.2f}"), use_container_width=True)
+    
+        # Optional chart
+        with st.expander("📈 Show Credit/Debit Trend Chart"):
+            chart_data = monthly_summary.reset_index()
+            st.line_chart(chart_data.set_index("Month"))
+    
+        st.markdown("---")
+    
+        # Transaction Table
         st.subheader("📋 Full Bank Transaction Log")
-        st.dataframe(bank_df.sort_values(by="Date", ascending=False))
+    
+        def highlight_transaction(row):
+            color = "green" if row["Type"].lower() == "credit" else "red"
+            return [f"color: {color}; font-weight: bold" if col == "Amount" else "" for col in row.index]
+    
+        # Sort and style table
+        styled_txn = bank_df.sort_values(by="Date", ascending=False).style.apply(highlight_transaction, axis=1)
+        styled_txn = styled_txn.format({"Amount": "₹{:.2f}", "Date": lambda x: x.strftime("%d-%b-%Y")})
+    
+        st.dataframe(styled_txn, use_container_width=True)
+
     
     # 🔁 Refresh button
     if st.sidebar.button("🔁 Refresh"):
