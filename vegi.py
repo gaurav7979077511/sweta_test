@@ -493,15 +493,12 @@ else:
         st.markdown("---")
     
         # ───────────────────────────────────────────────────────────────
-        # 🔹 Section 2: Bank-Based Expense Breakdown
-        st.subheader("🏦 Bank-Based Expenses")
+        # 🔹 Section 2: Manually Entered Expenses
+        st.subheader("🧾 Manual Expense Summary")
     
-        bank_by_person_df = pd.DataFrame({
-            "Person": ["Govind Kumar", "Kumar Gaurav"],
-            "Amount Paid via Bank": [govind_expense_debit, gaurav_expense_debit]
-        })
-    
-        st.bar_chart(bank_by_person_df.set_index("Person"))
+        # Monthly manual expenses
+        monthly_manual_expense = expense_df.groupby("Month-Year", as_index=False)['Amount Used'].sum()
+        st.bar_chart(monthly_manual_expense.set_index("Month-Year"))
     
         with st.expander("🔍 View Bank Expense Transactions"):
             bank_expense_df = bank_df[bank_df['Transaction Type'] == 'Expence_Debit'][['Date', 'Transaction By', 'Amount', 'Reason']]
@@ -510,18 +507,7 @@ else:
         st.markdown("---")
     
         # ───────────────────────────────────────────────────────────────
-        # 🔹 Section 3: Manually Entered Expenses
-        st.subheader("🧾 Manual Expense Summary")
-    
-        # Monthly manual expenses
-        monthly_manual_expense = expense_df.groupby("Month-Year", as_index=False)['Amount Used'].sum()
-        st.bar_chart(monthly_manual_expense.set_index("Month-Year"))
-    
-    
-        st.markdown("---")
-    
-        # ───────────────────────────────────────────────────────────────
-        # 🔹 Section 4: Detailed Manual Expense Entries
+        # 🔹 Section 3: Detailed Manual Expense Entries
         st.subheader("📋 Detailed Manual Expense Entries")
         st.dataframe(expense_df.sort_values(by="Date", ascending=False))
     
