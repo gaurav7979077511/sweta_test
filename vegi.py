@@ -672,23 +672,20 @@ else:
                 return "color: red; font-weight: bold"
             else:
                 return ""
-    
+        
         def style_row(row):
             return [
                 highlight_amount(row["Amount"], row["Previous Amount"]) if col == "Amount" else ""
                 for col in row.index
             ]
-    
-        # Apply style
-        styled_df = merged_df[filtered_df.columns + ["Previous Amount"]].style.apply(style_row, axis=1)
+        
+        # Apply style safely
+        styled_df = merged_df[list(filtered_df.columns) + ["Previous Amount"]].style.apply(style_row, axis=1)
         styled_df = styled_df.format({
             "Amount": "₹{:.2f}",
             "Distance": "{:.2f}"
         })
-    
-        # Display
-        st.subheader("📄 Collection Records")
-        st.dataframe(styled_df, use_container_width=True)
+
 
 
 
