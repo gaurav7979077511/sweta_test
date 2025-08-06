@@ -697,48 +697,52 @@ else:
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
     
-        # Ensure 'Date' column is datetime
-        bank_df["Date"] = pd.to_datetime(bank_df["Date"])
+        # Ensure 'Date' is datetime
+        bank_df["Date"] = pd.to_datetime(bank_df["Date"], dayfirst=True)
     
-        # Compute Current Balance
-        total_credit = bank_df.loc[bank_df["Type"].str.lower() == "credit", "Amount"].sum()
-        total_debit = bank_df.loc[bank_df["Type"].str.lower() == "debit", "Amount"].sum()
-        current_balance = total_credit - total_debit
+        # 💰 Calculate Balance
+        bank_df["Transaction Type"] = bank_df["Transaction Type"].str.strip()
+        credit_mask = bank_df["Transaction Type"].str.lower().str.contains("credit")
+        debit_mask = bank_df["Transaction Type"].str.lower().str.contains("debit")
     
-        # KPIs
-        col1, col2, col3 = st.columns(3)
-        col1.metric("⬆️ Total Credit", f"₹{total_credit:,.2f}")
-        col2.metric("⬇️ Total Debit", f"₹{total_debit:,.2f}")
-        col3.metric("💰 Current Balance", f"₹{current_balance:,.2f}")
+        total_credit = bank_df.loc[credit_mask, "Amount"].sum()
+        total_debit = bank_df.loc[debit_mask, "Amount"].sum()
+        balance = total_credit - total_debit
     
-        st.markdown("---")
+        st.subheader("💰 Current Bank Balance")
+        st.metric(label="Available Balance", value=f"₹ {balance:,.2f}", delta=f"₹ {total_credit - total_debit:,.2f}")
     
-        # Monthly summary
+        # 📊 Monthly Summary
         st.subheader("📊 Monthly Transaction Summary")
+        bank_df["Month"] = bank_df["Date"].dt.strftime("%B %Y")
     
-        bank_df["Month"] = bank_df["Date"].dt.to_period("M").astype(str)
-        monthly_summary = bank_df.groupby(["Month", "Type"])["Amount"].sum().unstack().fillna(0)
-        st.dataframe(monthly_summary.style.format("₹{:.2f}"), use_container_width=True)
+        monthly_summary = (
+            bank_df.groupby(["Month", "Transaction Type"])["Amount"]
+            .sum()
+            .unstack(fill_value=0)
+            .reset_index()
+        )
+        st.dataframe(monthly_summary)
     
-        # Optional chart
-        with st.expander("📈 Show Credit/Debit Trend Chart"):
-            chart_data = monthly_summary.reset_index()
-            st.line_chart(chart_data.set_index("Month"))
-    
-        st.markdown("---")
-    
-        # Transaction Table
+        # 📋 Styled Transaction Log
         st.subheader("📋 Full Bank Transaction Log")
     
-        def highlight_transaction(row):
-            color = "green" if row["Type"].lower() == "credit" else "red"
-            return [f"color: {color}; font-weight: bold" if col == "Amount" else "" for col in row.index]
+        # ➕/➖ Format and color column
+        def format_amount(row):
+            amt = row["Amount"]
+            if "credit" in row["Transaction Type"].lower():
+                return f"🟢 +₹{amt:,.2f}"
+            elif "debit" in row["Transaction Type"].lower():
+                return f"🔴 -₹{amt:,.2f}"
+            return f"₹{amt:,.2f}"
     
-        # Sort and style table
-        styled_txn = bank_df.sort_values(by="Date", ascending=False).style.apply(highlight_transaction, axis=1)
-        styled_txn = styled_txn.format({"Amount": "₹{:.2f}", "Date": lambda x: x.strftime("%d-%b-%Y")})
+        styled_df = bank_df.copy()
+        styled_df["Formatted Amount"] = styled_df.apply(format_amount, axis=1)
     
-        st.dataframe(styled_txn, use_container_width=True)
+        # Rearranging columns for display
+        display_cols = ["Date", "Transaction By", "Transaction Type", "Reason", "Formatted Amount", "Bill"]
+        st.dataframe(styled_df[display_cols].sort_values(by="Date", ascending=False), use_container_width=True)
+
 
     
     # 🔁 Refresh button
