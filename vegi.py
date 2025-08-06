@@ -599,16 +599,19 @@ else:
 
     
     elif page == "Collection Data":
+        # --- Clean column names just in case ---
+        df.columns = df.columns.str.strip()
+        
         # --- Preprocessing ---
         df["Collection Date"] = pd.to_datetime(df["Collection Date"])
         df["Month-Year"] = df["Collection Date"].dt.to_period("M").astype(str)
         
         # Group collection by Vehicle and Month
-        grouped = df.groupby(["Vehicle Number", "Month-Year"], as_index=False)["Amount"].sum()
+        grouped = df.groupby(["Vehicle No", "Month-Year"], as_index=False)["Amount"].sum()
         
         # Calculate total and best vehicle
         total_collection = grouped["Amount"].sum()
-        vehicle_avg = grouped.groupby("Vehicle Number")["Amount"].mean().reset_index()
+        vehicle_avg = grouped.groupby("Vehicle No")["Amount"].mean().reset_index()
         best_vehicle = vehicle_avg.loc[vehicle_avg["Amount"].idxmax()]
         
         # --- Header Section ---
@@ -620,7 +623,7 @@ else:
             st.metric("📊 Total Collection", f"₹{total_collection:,.2f}")
         
         with col2:
-            st.metric("🏆 Best Performing Vehicle", f"{best_vehicle['Vehicle Number']}", 
+            st.metric("🏆 Best Performing Vehicle", f"{best_vehicle['Vehicle No']}", 
                       help="Based on average monthly collection")
         
         st.markdown("---")
@@ -628,10 +631,10 @@ else:
         # --- Trend Charts per Vehicle ---
         st.markdown("## 📈 Monthly Trend by Vehicle")
         
-        vehicles = grouped["Vehicle Number"].unique()
+        vehicles = grouped["Vehicle No"].unique()
         
         for vehicle in vehicles:
-            vehicle_df = grouped[grouped["Vehicle Number"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
+            vehicle_df = grouped[grouped["Vehicle No"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
         
             with st.expander(f"📊 Trend Chart: `{vehicle}`"):
                 fig, ax = plt.subplots()
@@ -649,7 +652,7 @@ else:
         st.markdown("## 📋 Detailed Vehicle-wise Monthly Collection")
         
         for vehicle in vehicles:
-            vehicle_df = grouped[grouped["Vehicle Number"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
+            vehicle_df = grouped[grouped["Vehicle No"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
         
             st.markdown(f"### 🚗 Vehicle: `{vehicle}`")
         
@@ -661,7 +664,7 @@ else:
                 if i > 0:
                     prev_amount = vehicle_df.iloc[i - 1]["Amount"]
                     delta = amount - prev_amount
-                    arrow = "⬆️" if delta > 0 else "⬇️"
+                    arrow = "↑" if delta > 0 else "↓"
                     color = "green" if delta > 0 else "red"
                     diff_percent = abs(delta) / prev_amount * 100 if prev_amount != 0 else 0
                     diff_text = f"{arrow} ₹{abs(delta):,.2f} ({diff_percent:.1f}%)"
