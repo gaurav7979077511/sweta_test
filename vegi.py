@@ -696,6 +696,17 @@ else:
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
+
+        # Add Transaction Button (Top Right)
+        col1, col2 = st.columns([6, 1])
+        with col2:
+            st.markdown(
+                f'<a href="https://forms.gle/Eq8eZdobWKX5aU84A" target="_blank">'
+                f'<button style="background-color:#4CAF50; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">➕ Add Bank Transaction</button>'
+                f'</a>',
+                unsafe_allow_html=True
+            )
+
     
         # Ensure 'Date' is datetime
         bank_df["Date"] = pd.to_datetime(bank_df["Date"], dayfirst=True)
