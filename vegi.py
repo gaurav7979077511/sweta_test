@@ -504,7 +504,7 @@ else:
         st.bar_chart(bank_by_person_df.set_index("Person"))
     
         with st.expander("🔍 View Bank Expense Transactions"):
-            bank_expense_df = bank_df[bank_df['Transaction Type'] == 'Expence_Debit'][['Date', 'Transaction By', 'Amount', 'Comment']]
+            bank_expense_df = bank_df[bank_df['Transaction Type'] == 'Expence_Debit'][['Date', 'Transaction By', 'Amount', 'Reason']]
             st.dataframe(bank_expense_df.sort_values(by="Date", ascending=False))
     
         st.markdown("---")
