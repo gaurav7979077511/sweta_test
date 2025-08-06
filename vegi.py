@@ -603,22 +603,21 @@ else:
     
         # Ensure date column is in datetime format
         df["Collection Date"] = pd.to_datetime(df["Collection Date"])
-    
-        # Sort by Collection Date descending
-        df = df.sort_values("Collection Date", ascending=False)
-    
-        # Calculate previous amount per vehicle
+        
+        # Sort data by vehicle and date
         df = df.sort_values(["Vehicle No", "Collection Date"])
+    
+        # Calculate Previous Amount
         df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(1)
         df["Change"] = df["Amount"] - df["Previous Amount"]
     
-        # KPIs based on all data
+        # --- KPIs based on full dataset ---
         total_collection = df["Amount"].sum()
         total_vehicles = df["Vehicle No"].nunique()
         best_vehicle = df.groupby("Vehicle No")["Amount"].mean().idxmax()
         worst_vehicle = df.groupby("Vehicle No")["Amount"].mean().idxmin()
     
-        # Show KPI Metrics
+        # KPI Display
         col1, col2, col3, col4, col5 = st.columns(5)
         col1.metric("💰 Total Collection", f"₹{total_collection:,.2f}")
         col2.metric("🚐 Total Vehicles", total_vehicles)
@@ -628,62 +627,56 @@ else:
     
         st.markdown("---")
     
-        # Vehicle filter
-        vehicle_list = ["All"] + sorted(df["Vehicle No"].unique())
-        selected_vehicle = st.selectbox("🚗 Filter by Vehicle", vehicle_list)
+        # --- Filter ---
+        vehicle_options = ["All"] + sorted(df["Vehicle No"].unique())
+        selected_vehicle = st.selectbox("Select Vehicle", vehicle_options)
     
-        if selected_vehicle != "All":
-            filtered_df = df[df["Vehicle No"] == selected_vehicle]
-        else:
+        if selected_vehicle == "All":
             filtered_df = df.copy()
+        else:
+            filtered_df = df[df["Vehicle No"] == selected_vehicle]
     
-        # Total collection for selected vehicle
+        # Calculate total for selected vehicle
         selected_total = filtered_df["Amount"].sum()
-        st.info(f"💰 **Total Collection for {selected_vehicle if selected_vehicle != 'All' else 'All Vehicles'}**: ₹{selected_total:,.2f}")
     
-        st.markdown("### 📈 Collection Trend")
+        # --- Bold Display of Filtered Total ---
+        st.markdown(
+            f"<div style='background-color:#f0f2f6; padding:10px; border-radius:8px; font-size:20px; font-weight:bold; color:#1c1c1c;'>"
+            f"💰 Total Collection for <span style='color:#0a58ca;'>{selected_vehicle if selected_vehicle != 'All' else 'All Vehicles'}</span>: ₹{selected_total:,.2f}"
+            "</div>",
+            unsafe_allow_html=True
+        )
     
-        # Line chart for all vehicles
-        chart_df = df.groupby(["Collection Date", "Vehicle No"])["Amount"].sum().reset_index()
-        chart_pivot = chart_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
-        st.line_chart(chart_pivot)
+        # --- Graph for filtered data ---
+        chart_df = filtered_df.groupby(["Collection Date", "Vehicle No"])["Amount"].sum().reset_index()
+        st.line_chart(chart_df, x="Collection Date", y="Amount", use_container_width=True)
     
-        st.markdown("### 📄 Collection Records")
+        st.markdown("---")
     
-        # Columns to show
-        display_cols = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance"]
+        # --- Distance Formatting ---
+        if "Distance" in filtered_df.columns:
+            filtered_df["Distance"] = filtered_df["Distance"].round(2)
     
-        # Round distance
-        df["Distance"] = df["Distance"].round(2)
+        # Sort the final display by latest date
+        merged_df = filtered_df.sort_values("Collection Date", ascending=False).copy()
     
-        # Styling
-        def highlight_amount(val, prev):
-            if pd.isna(prev):
-                return ""
-            elif val > prev:
-                return "color: green; font-weight: bold"
-            elif val < prev:
-                return "color: red; font-weight: bold"
-            else:
-                return ""
-    
+        # --- Color Highlighting Function ---
         def style_row(row):
-            return [
-                highlight_amount(row["Amount"], row["Previous Amount"]) if col == "Amount" else ""
-                for col in row.index
-            ]
+            if pd.isna(row["Previous Amount"]):
+                return [""] * len(row)
+            elif row["Amount"] > row["Previous Amount"]:
+                return ["color: green; font-weight: bold" if col == "Amount" else "" for col in row.index]
+            elif row["Amount"] < row["Previous Amount"]:
+                return ["color: red; font-weight: bold" if col == "Amount" else "" for col in row.index]
+            else:
+                return [""] * len(row)
     
-        # Prepare merged dataframe with Previous Amount (needed for color logic)
-        merged_df = filtered_df.copy()
+        display_cols = [col for col in filtered_df.columns if col not in ["Previous Amount", "Change"]]
+    
         styled_df = merged_df[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
+        styled_df = styled_df.hide_columns(["Previous Amount"])  # Hide Previous Amount in table
     
-        # Format currency and distance
-        styled_df = styled_df.format({
-            "Amount": "₹{:.2f}",
-            "Distance": "{:.2f}"
-        })
-    
-        # Show styled dataframe
+        st.subheader("📄 Collection Records")
         st.dataframe(styled_df, use_container_width=True)
 
 
