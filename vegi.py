@@ -512,11 +512,7 @@ else:
         st.dataframe(expense_df.sort_values(by="Date", ascending=False))
     
     
-    
-    
-    elif page == "Collection Data":
-        st.title("📋 Full Collection Data")
-        st.dataframe(df.sort_values(by="Collection Date", ascending=False))
+#-----------------------------------------------------
 
     
     elif page == "Investment":
@@ -601,6 +597,88 @@ else:
         st.subheader("📋 All Investment Records")
         st.dataframe(full_investment_df.sort_values(by="Date", ascending=False))
 
+    
+    elif page == "Collection Data":
+        # --- Preprocessing ---
+        df["Date"] = pd.to_datetime(df["Date"])
+        df["Month-Year"] = df["Date"].dt.to_period("M").astype(str)
+        
+        # Group collection by Vehicle and Month
+        grouped = df.groupby(["Vehicle Number", "Month-Year"], as_index=False)["Amount"].sum()
+        
+        # Calculate total and best vehicle
+        total_collection = grouped["Amount"].sum()
+        vehicle_avg = grouped.groupby("Vehicle Number")["Amount"].mean().reset_index()
+        best_vehicle = vehicle_avg.loc[vehicle_avg["Amount"].idxmax()]
+        
+        # --- Header Section ---
+        st.markdown("## 💰 Collection Summary Overview")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric("📊 Total Collection", f"₹{total_collection:,.2f}")
+        
+        with col2:
+            st.metric("🏆 Best Performing Vehicle", f"{best_vehicle['Vehicle Number']}", 
+                      help="Based on average monthly collection")
+        
+        st.markdown("---")
+        
+        # --- Trend Charts per Vehicle ---
+        st.markdown("## 📈 Monthly Trend by Vehicle")
+        
+        vehicles = grouped["Vehicle Number"].unique()
+        
+        for vehicle in vehicles:
+            vehicle_df = grouped[grouped["Vehicle Number"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
+        
+            with st.expander(f"📊 Trend Chart: `{vehicle}`"):
+                fig, ax = plt.subplots()
+                ax.plot(vehicle_df["Month-Year"], vehicle_df["Amount"], marker="o", linestyle="-")
+                ax.set_title(f"{vehicle} - Monthly Collection Trend")
+                ax.set_xlabel("Month")
+                ax.set_ylabel("Amount (₹)")
+                ax.grid(True)
+                plt.xticks(rotation=45)
+                st.pyplot(fig)
+        
+        st.markdown("---")
+        
+        # --- Detailed Table with Color-coded Values and Arrows ---
+        st.markdown("## 📋 Detailed Vehicle-wise Monthly Collection")
+        
+        for vehicle in vehicles:
+            vehicle_df = grouped[grouped["Vehicle Number"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
+        
+            st.markdown(f"### 🚗 Vehicle: `{vehicle}`")
+        
+            for i in range(len(vehicle_df)):
+                row = vehicle_df.iloc[i]
+                month = row["Month-Year"]
+                amount = row["Amount"]
+        
+                if i > 0:
+                    prev_amount = vehicle_df.iloc[i - 1]["Amount"]
+                    delta = amount - prev_amount
+                    arrow = "↑" if delta > 0 else "↓"
+                    color = "green" if delta > 0 else "red"
+                    diff_percent = abs(delta) / prev_amount * 100 if prev_amount != 0 else 0
+                    diff_text = f"{arrow} ₹{abs(delta):,.2f} ({diff_percent:.1f}%)"
+                else:
+                    color = "black"
+                    diff_text = "—"
+                    arrow = ""
+        
+                st.markdown(f"""
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding: 5px 0;">
+                        <div><b>{month}</b></div>
+                        <div><span style="color:{color}; font-weight: bold;">₹{amount:,.2f} {arrow}</span> 
+                        <small style="color:{color};">({diff_text})</small></div>
+                    </div>
+                """, unsafe_allow_html=True)
+        
+            st.markdown("---")
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
