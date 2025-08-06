@@ -599,89 +599,66 @@ else:
 
     
     elif page == "Collection Data":
-        # --- Clean column names just in case ---
-        df.columns = df.columns.str.strip()
-        
-        # --- Preprocessing ---
+        st.title("📊 Collection Data")
+    
+        # Ensure date column is in datetime format
         df["Collection Date"] = pd.to_datetime(df["Collection Date"])
-        df["Month-Year"] = df["Collection Date"].dt.to_period("M").astype(str)
-        
-        # Group collection by Vehicle and Month
-        grouped = df.groupby(["Vehicle No", "Month-Year"], as_index=False)["Amount"].sum()
-        
-        # Calculate total and best vehicle
-        total_collection = grouped["Amount"].sum()
-        vehicle_avg = grouped.groupby("Vehicle No")["Amount"].mean().reset_index()
-        best_vehicle = vehicle_avg.loc[vehicle_avg["Amount"].idxmax()]
-        
-        # --- Header Section ---
-        st.markdown("## 💰 Collection Summary Overview")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.metric("📊 Total Collection", f"₹{total_collection:,.2f}")
-        
-        with col2:
-            st.metric("🏆 Best Performing Vehicle", f"{best_vehicle['Vehicle No']}", 
-                      help="Based on average monthly collection")
-        
+    
+        # Sort data by vehicle and date
+        df = df.sort_values(["Vehicle No", "Collection Date"])
+    
+        # Calculate previous amount for same vehicle
+        df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(1)
+    
+        # Calculate difference
+        df["Change"] = df["Amount"] - df["Previous Amount"]
+    
+        # --- Summary Metrics ---
+        total_collection = df["Amount"].sum()
+        total_vehicles = df["Vehicle No"].nunique()
+        best_vehicle = (
+            df.groupby("Vehicle No")["Amount"]
+            .mean()
+            .idxmax()
+        )
+        worst_vehicle = (
+            df.groupby("Vehicle No")["Amount"]
+            .mean()
+            .idxmin()
+        )
+    
+        # Show KPIs
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("💰 Total Collection", f"₹{total_collection}")
+        col2.metric("🚐 Total Vehicles", total_vehicles)
+        col3.metric("🏆 Best Vehicle", best_vehicle)
+        col4.metric("📉 Worst Vehicle", worst_vehicle)
+        col5.metric("📄 Total Records", len(df))
+    
         st.markdown("---")
-        
-        # --- Trend Charts per Vehicle ---
-        st.markdown("## 📈 Monthly Trend by Vehicle")
-        
-        vehicles = grouped["Vehicle No"].unique()
-        
-        for vehicle in vehicles:
-            vehicle_df = grouped[grouped["Vehicle No"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
-        
-            with st.expander(f"📊 Trend Chart: `{vehicle}`"):
-                fig, ax = plt.subplots()
-                ax.plot(vehicle_df["Month-Year"], vehicle_df["Amount"], marker="o", linestyle="-")
-                ax.set_title(f"{vehicle} - Monthly Collection Trend")
-                ax.set_xlabel("Month")
-                ax.set_ylabel("Amount (₹)")
-                ax.grid(True)
-                plt.xticks(rotation=45)
-                st.pyplot(fig)
-        
-        st.markdown("---")
-        
-        # --- Detailed Table with Color-coded Values and Arrows ---
-        st.markdown("## 📋 Detailed Vehicle-wise Monthly Collection")
-        
-        for vehicle in vehicles:
-            vehicle_df = grouped[grouped["Vehicle No"] == vehicle].sort_values("Month-Year").reset_index(drop=True)
-        
-            st.markdown(f"### 🚗 Vehicle: `{vehicle}`")
-        
-            for i in range(len(vehicle_df)):
-                row = vehicle_df.iloc[i]
-                month = row["Month-Year"]
-                amount = row["Amount"]
-        
-                if i > 0:
-                    prev_amount = vehicle_df.iloc[i - 1]["Amount"]
-                    delta = amount - prev_amount
-                    arrow = "↑" if delta > 0 else "↓"
-                    color = "green" if delta > 0 else "red"
-                    diff_percent = abs(delta) / prev_amount * 100 if prev_amount != 0 else 0
-                    diff_text = f"{arrow} ₹{abs(delta):,.2f} ({diff_percent:.1f}%)"
-                else:
-                    color = "black"
-                    diff_text = "—"
-                    arrow = ""
-        
-                st.markdown(f"""
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding: 5px 0;">
-                        <div><b>{month}</b></div>
-                        <div><span style="color:{color}; font-weight: bold;">₹{amount:,.2f} {arrow}</span> 
-                        <small style="color:{color};">({diff_text})</small></div>
-                    </div>
-                """, unsafe_allow_html=True)
-        
-            st.markdown("---")
+    
+        # --- Color Highlighting Function ---
+        def highlight_amount(row):
+            if pd.isna(row["Previous Amount"]):
+                return ""
+            elif row["Amount"] > row["Previous Amount"]:
+                return "color: green; font-weight: bold"
+            elif row["Amount"] < row["Previous Amount"]:
+                return "color: red; font-weight: bold"
+            else:
+                return ""
+    
+        # Apply highlight only to Amount column
+        styled_df = df.style.apply(
+            lambda row: [
+                highlight_amount(row) if col == "Amount" else "" 
+                for col in row.index
+            ], 
+            axis=1
+        )
+    
+        st.subheader("📄 Full Collection Record")
+        st.dataframe(styled_df, use_container_width=True)
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
