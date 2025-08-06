@@ -700,8 +700,9 @@ else:
         # Ensure 'Date' is datetime
         bank_df["Date"] = pd.to_datetime(bank_df["Date"], dayfirst=True)
     
-        # 💰 Calculate Balance
+        # Normalize whitespace and case
         bank_df["Transaction Type"] = bank_df["Transaction Type"].str.strip()
+    
         credit_mask = bank_df["Transaction Type"].str.lower().str.contains("credit")
         debit_mask = bank_df["Transaction Type"].str.lower().str.contains("debit")
     
@@ -709,6 +710,7 @@ else:
         total_debit = bank_df.loc[debit_mask, "Amount"].sum()
         balance = total_credit - total_debit
     
+        # 💰 Current Balance
         st.subheader("💰 Current Bank Balance")
         st.metric(label="Available Balance", value=f"₹ {balance:,.2f}", delta=f"₹ {total_credit - total_debit:,.2f}")
     
@@ -724,24 +726,36 @@ else:
         )
         st.dataframe(monthly_summary)
     
-        # 📋 Styled Transaction Log
+        # 📋 Full Transaction Log
         st.subheader("📋 Full Bank Transaction Log")
     
-        # ➕/➖ Format and color column
+        # Prepare DataFrame
+        display_df = bank_df[["Date", "Transaction By", "Transaction Type", "Reason", "Amount", "Bill"]].copy()
+    
+        # Format Amount with + / - and apply color
         def format_amount(row):
             amt = row["Amount"]
             if "credit" in row["Transaction Type"].lower():
-                return f"🟢 +₹{amt:,.2f}"
+                return f"+₹{amt:,.2f}"
             elif "debit" in row["Transaction Type"].lower():
-                return f"🔴 -₹{amt:,.2f}"
+                return f"-₹{amt:,.2f}"
             return f"₹{amt:,.2f}"
     
-        styled_df = bank_df.copy()
-        styled_df["Formatted Amount"] = styled_df.apply(format_amount, axis=1)
+        display_df["Formatted Amount"] = bank_df.apply(format_amount, axis=1)
     
-        # Rearranging columns for display
-        display_cols = ["Date", "Transaction By", "Transaction Type", "Reason", "Formatted Amount", "Bill"]
-        st.dataframe(styled_df[display_cols].sort_values(by="Date", ascending=False), use_container_width=True)
+        # Style Amount column with color
+        def color_amount(val):
+            if isinstance(val, str):
+                if val.startswith("+"):
+                    return "color: green"
+                elif val.startswith("-"):
+                    return "color: red"
+            return ""
+    
+        styled = display_df[["Date", "Transaction By", "Transaction Type", "Reason", "Formatted Amount", "Bill"]].sort_values(by="Date", ascending=False)
+        styled_df = styled.style.applymap(color_amount, subset=["Formatted Amount"])
+    
+        st.dataframe(styled_df, use_container_width=True)
 
 
     
