@@ -700,12 +700,13 @@ else:
         # Ensure 'Date' is datetime
         bank_df["Date"] = pd.to_datetime(bank_df["Date"], dayfirst=True)
         bank_df["Transaction Type"] = bank_df["Transaction Type"].str.strip()
-        bank_df["Month"] = bank_df["Date"].dt.strftime("%B %Y")
+        bank_df["Month"] = bank_df["Date"].dt.strftime("%B")
+        bank_df["Year"] = bank_df["Date"].dt.year
     
-        # 🔒 Keep original for current balance calculation
+        # 🔒 Full data copy for current balance
         full_df = bank_df.copy()
     
-        # Calculate total credit/debit from full data (not filtered)
+        # Total balance from full data (not filtered)
         credit_mask_full = full_df["Transaction Type"].str.lower().str.contains("credit")
         debit_mask_full = full_df["Transaction Type"].str.lower().str.contains("debit")
     
@@ -713,19 +714,20 @@ else:
         total_debit = full_df.loc[debit_mask_full, "Amount"].sum()
         balance = total_credit - total_debit
     
-        # 📌 Filter Section
-        st.subheader("📅 Filter Transactions")
-        filter_option = st.selectbox("Choose filter type:", ["All", "Last 3 Months", "Select Month-Year"])
+        # 📌 Sidebar Filters
+        st.sidebar.header("📅 Filter Transactions")
     
-        today = pd.Timestamp.today()
+        filter_option = st.sidebar.selectbox("Choose filter type:", ["All", "Last 3 Months", "Select Month & Year"])
+    
         if filter_option == "All":
             filtered_df = bank_df
         elif filter_option == "Last 3 Months":
-            last_3_months = today - pd.DateOffset(months=3)
+            last_3_months = pd.Timestamp.today() - pd.DateOffset(months=3)
             filtered_df = bank_df[bank_df["Date"] >= last_3_months]
-        elif filter_option == "Select Month-Year":
-            selected_month = st.selectbox("Select Month-Year:", sorted(bank_df["Month"].unique(), reverse=True))
-            filtered_df = bank_df[bank_df["Month"] == selected_month]
+        elif filter_option == "Select Month & Year":
+            selected_year = st.sidebar.selectbox("Year", sorted(bank_df["Year"].unique(), reverse=True))
+            selected_month = st.sidebar.selectbox("Month", sorted(bank_df["Month"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month))
+            filtered_df = bank_df[(bank_df["Year"] == selected_year) & (bank_df["Month"] == selected_month)]
     
         # 💰 Current Balance (Always from full data)
         st.subheader("💰 Current Bank Balance")
@@ -784,8 +786,6 @@ else:
             file_name="filtered_bank_transactions.csv",
             mime="text/csv"
         )
-
-
 
     
     # 🔁 Refresh button
