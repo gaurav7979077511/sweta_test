@@ -603,62 +603,60 @@ else:
     
         # Ensure date column is in datetime format
         df["Collection Date"] = pd.to_datetime(df["Collection Date"])
+        
+        # Sort data by Collection Date DESC
+        df = df.sort_values("Collection Date", ascending=False)
     
-        # Sort data by vehicle and date
-        df = df.sort_values(["Vehicle No", "Collection Date"])
-    
-        # Calculate previous amount for same vehicle
-        df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(1)
-    
-        # Calculate difference
-        df["Change"] = df["Amount"] - df["Previous Amount"]
-    
-        # --- Summary Metrics ---
+        # Total collection
         total_collection = df["Amount"].sum()
-        total_vehicles = df["Vehicle No"].nunique()
-        best_vehicle = (
-            df.groupby("Vehicle No")["Amount"]
-            .mean()
-            .idxmax()
-        )
-        worst_vehicle = (
-            df.groupby("Vehicle No")["Amount"]
-            .mean()
-            .idxmin()
+    
+        # Filter by vehicle number
+        vehicle_list = ["All"] + sorted(df["Vehicle No"].dropna().unique())
+        selected_vehicle = st.selectbox("🚐 Filter by Vehicle No:", vehicle_list)
+    
+        if selected_vehicle != "All":
+            filtered_df = df[df["Vehicle No"] == selected_vehicle]
+        else:
+            filtered_df = df
+    
+        # --- Line chart for vehicle trends ---
+        st.subheader("📈 Vehicle-wise Collection Trend")
+    
+        trend_df = (
+            filtered_df.groupby(["Collection Date", "Vehicle No"])["Amount"]
+            .sum()
+            .reset_index()
         )
     
-        # Show KPIs
-        col1, col2, col3, col4, col5 = st.columns(5)
-        col1.metric("💰 Total Collection", f"₹{total_collection}")
-        col2.metric("🚐 Total Vehicles", total_vehicles)
-        col3.metric("🏆 Best Vehicle", best_vehicle)
-        col4.metric("📉 Worst Vehicle", worst_vehicle)
-        col5.metric("📄 Total Records", len(df))
+        pivot_df = trend_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
+        st.line_chart(pivot_df)
     
         st.markdown("---")
     
-        # --- Color Highlighting Function ---
-        def highlight_amount(row):
-            if pd.isna(row["Previous Amount"]):
-                return ""
-            elif row["Amount"] > row["Previous Amount"]:
-                return "color: green; font-weight: bold"
-            elif row["Amount"] < row["Previous Amount"]:
-                return "color: red; font-weight: bold"
-            else:
-                return ""
+        # Show total collection
+        st.metric("💰 Total Collection", f"₹{filtered_df['Amount'].sum():,.2f}")
     
-        # Apply highlight only to Amount column
-        styled_df = df.style.apply(
+        st.markdown("---")
+    
+        # --- Prepare dataframe to show ---
+        columns_to_show = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance"]
+        show_df = filtered_df[columns_to_show].copy()
+    
+        # Highlighting changes (optional, can be skipped here if not needed)
+        def highlight_amount(row):
+            return "color: green; font-weight: bold" if row["Amount"] > 0 else ""
+    
+        styled_df = show_df.style.apply(
             lambda row: [
-                highlight_amount(row) if col == "Amount" else "" 
+                highlight_amount(row) if col == "Amount" else ""
                 for col in row.index
-            ], 
+            ],
             axis=1
         )
     
-        st.subheader("📄 Full Collection Record")
+        st.subheader("📋 Collection Records")
         st.dataframe(styled_df, use_container_width=True)
+
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
