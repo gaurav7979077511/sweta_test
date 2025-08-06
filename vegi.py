@@ -611,10 +611,10 @@ else:
         df = df.sort_values(["Vehicle No", "Collection Date"])
         df["Previous Amount"] = df.groupby("Vehicle No")["Amount"].shift(1)
     
-        # Calculate difference
+        # Calculate change
         df["Change"] = df["Amount"] - df["Previous Amount"]
     
-        # --- KPI Metrics (UNFILTERED, full data) ---
+        # --- KPI Metrics (Full Data, NOT filtered) ---
         total_collection = df["Amount"].sum()
         total_vehicles = df["Vehicle No"].nunique()
         best_vehicle = df.groupby("Vehicle No")["Amount"].mean().idxmax()
@@ -630,7 +630,7 @@ else:
     
         st.markdown("---")
     
-        # --- Chart: Trend Line for All Vehicles ---
+        # --- Line Chart: Collection Trend by Vehicle ---
         st.subheader("📈 Collection Trend per Vehicle")
         trend_df = df.groupby(["Collection Date", "Vehicle No"])["Amount"].sum().reset_index()
         chart_df = trend_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
@@ -642,7 +642,6 @@ else:
         vehicle_list = ["All"] + sorted(df["Vehicle No"].dropna().unique())
         selected_vehicle = st.selectbox("🚐 Filter by Vehicle No:", vehicle_list)
     
-        # --- Apply Filter ---
         if selected_vehicle != "All":
             filtered_df = df[df["Vehicle No"] == selected_vehicle].copy()
             selected_vehicle_total = filtered_df["Amount"].sum()
@@ -652,35 +651,42 @@ else:
     
         st.markdown("---")
     
-        # --- Columns to Display ---
+        # --- Display Columns ---
         display_cols = ["Collection Date", "Vehicle No", "Amount", "Meter Reading", "Name", "Distance"]
-        filtered_df = filtered_df[display_cols]
+        filtered_df = filtered_df[display_cols].copy()
     
-        # --- Color Highlighting Function ---
-        def highlight_amount(row):
-            if pd.isna(row.get("Previous Amount")):
+        # Round Distance for clean display
+        filtered_df["Distance"] = filtered_df["Distance"].round(2)
+    
+        # Merge Previous Amount from main df for styling
+        styling_df = df[["Collection Date", "Vehicle No", "Amount", "Previous Amount"]]
+        merged_df = pd.merge(filtered_df, styling_df, on=["Collection Date", "Vehicle No", "Amount"], how="left")
+    
+        # --- Color Formatting ---
+        def highlight_amount(val, prev):
+            if pd.isna(prev):
                 return ""
-            elif row["Amount"] > row["Previous Amount"]:
+            elif val > prev:
                 return "color: green; font-weight: bold"
-            elif row["Amount"] < row["Previous Amount"]:
+            elif val < prev:
                 return "color: red; font-weight: bold"
             else:
                 return ""
     
-        # Re-merge Previous Amount for color styling
-        style_df = df[["Collection Date", "Vehicle No", "Amount", "Previous Amount"]]
-        merged_df = pd.merge(filtered_df, style_df, on=["Collection Date", "Vehicle No", "Amount"], how="left")
-    
-        # Styled DataFrame
-        styled_df = merged_df[filtered_df.columns].style.apply(
-            lambda row: [
-                highlight_amount(row) if col == "Amount" else "" 
+        def style_row(row):
+            return [
+                highlight_amount(row["Amount"], row["Previous Amount"]) if col == "Amount" else ""
                 for col in row.index
-            ],
-            axis=1
-        )
+            ]
     
-        # --- Final Table ---
+        # Apply style
+        styled_df = merged_df[filtered_df.columns + ["Previous Amount"]].style.apply(style_row, axis=1)
+        styled_df = styled_df.format({
+            "Amount": "₹{:.2f}",
+            "Distance": "{:.2f}"
+        })
+    
+        # Display
         st.subheader("📄 Collection Records")
         st.dataframe(styled_df, use_container_width=True)
 
