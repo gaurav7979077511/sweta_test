@@ -707,6 +707,8 @@ else:
         debit_mask = bank_df["Transaction Type"].str.lower().str.contains("debit")
         st.write("credit_mask",credit_mask)
         st.write("debit_mask",debit_mask)
+        st.write("Columns:", bank_df.columns.tolist())
+
     
         total_credit = bank_df.loc[credit_mask, "Amount"].sum()
         total_debit = bank_df.loc[debit_mask, "Amount"].sum()
