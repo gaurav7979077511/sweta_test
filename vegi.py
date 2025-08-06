@@ -600,8 +600,8 @@ else:
     
     elif page == "Collection Data":
         # --- Preprocessing ---
-        df["Date"] = pd.to_datetime(df["Date"])
-        df["Month-Year"] = df["Date"].dt.to_period("M").astype(str)
+        df["Collection Date"] = pd.to_datetime(df["Collection Date"])
+        df["Month-Year"] = df["Collection Date"].dt.to_period("M").astype(str)
         
         # Group collection by Vehicle and Month
         grouped = df.groupby(["Vehicle Number", "Month-Year"], as_index=False)["Amount"].sum()
@@ -661,7 +661,7 @@ else:
                 if i > 0:
                     prev_amount = vehicle_df.iloc[i - 1]["Amount"]
                     delta = amount - prev_amount
-                    arrow = "↑" if delta > 0 else "↓"
+                    arrow = "⬆️" if delta > 0 else "⬇️"
                     color = "green" if delta > 0 else "red"
                     diff_percent = abs(delta) / prev_amount * 100 if prev_amount != 0 else 0
                     diff_text = f"{arrow} ₹{abs(delta):,.2f} ({diff_percent:.1f}%)"
