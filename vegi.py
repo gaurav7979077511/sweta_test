@@ -348,8 +348,47 @@ else:
         col5.metric(label="📉"+formatted_last_month+" Expenses", value=f"₹{last_month_expense:,.2f}")
 
         st.markdown("---")
-        st.write("### 📈 Collection & Distance Trend")
-        st.line_chart(df.set_index("Collection Date")[["Amount", "Distance"]])
+        
+        # Convert Collection Date to datetime
+        df["Collection Date"] = pd.to_datetime(df["Collection Date"])
+        
+        # Default full data before filtering
+        filtered_df = df.copy()
+        
+        # === RADIO BUTTONS CENTERED BELOW CHART ===
+        col1, col2, col3 = st.columns([1, 3, 1])  # Center the middle column
+        with col2:
+            range_option = st.radio(
+                "",
+                ["1 Week", "1 Month", "3 Months", "6 Months", "1 Year", "3 Years", "5 Years", "Max"],
+                horizontal=True,
+            )
+        
+        # Determine the date range based on selection
+        today = pd.to_datetime("today")
+        if range_option == "1 Week":
+            start_date = today - pd.Timedelta(weeks=1)
+        elif range_option == "1 Month":
+            start_date = today - pd.DateOffset(months=1)
+        elif range_option == "3 Months":
+            start_date = today - pd.DateOffset(months=3)
+        elif range_option == "6 Months":
+            start_date = today - pd.DateOffset(months=6)
+        elif range_option == "1 Year":
+            start_date = today - pd.DateOffset(years=1)
+        elif range_option == "3 Years":
+            start_date = today - pd.DateOffset(years=3)
+        elif range_option == "5 Years":
+            start_date = today - pd.DateOffset(years=5)
+        else:
+            start_date = df["Collection Date"].min()
+        
+        # Filter data based on selected date range
+        filtered_df = df[df["Collection Date"] >= start_date]
+        
+        # === RERENDER CHART ===
+        st.line_chart(filtered_df.set_index("Collection Date")[["Amount", "Distance"]])
+
 
         st.write("### 🔍 Recent Collection Data:")
         st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
@@ -478,8 +517,8 @@ else:
 
     elif page == "Expenses":
         st.title("💸 Expense Insights")
-
-        # Add Investment Button (Top Right)
+    
+        # Add Expense Button
         col1, col2 = st.columns([6, 1])
         with col2:
             st.markdown(
@@ -488,9 +527,17 @@ else:
                 f'</a>',
                 unsafe_allow_html=True
             )
-
-        # ───────────────────────────────────────────────────────────────
-        # 🔹 Section 1: Total Expense Summary
+    
+        # ─────────────────────────────────────────────────────
+        # 🔹 Preprocessing
+        expense_df["Date"] = pd.to_datetime(expense_df["Date"], errors='coerce')
+        expense_df["Year"] = expense_df["Date"].dt.year
+        expense_df["Month"] = expense_df["Date"].dt.strftime('%B')
+        expense_df["Month_Num"] = expense_df["Date"].dt.month
+        expense_df["YearMonth"] = expense_df["Date"].dt.to_period("M").astype(str)
+    
+        # ─────────────────────────────────────────────────────
+        # 🔹 Static Metrics (Not Filter Dependent)
         total_manual_expense = expense_df["Amount Used"].sum()
         total_bank_expense = govind_expense_debit + gaurav_expense_debit
         total_expense = total_manual_expense + total_bank_expense
@@ -502,32 +549,57 @@ else:
     
         st.markdown("---")
     
-        # ───────────────────────────────────────────────────────────────
-        # 🔹 Section 2: Manually Entered Expenses
-        st.subheader("🧾 Manual Expense Summary")
+        # ─────────────────────────────────────────────────────
+        # 🔹 Filter: Expense By
+        st.sidebar.markdown("### 🔍 Filter")
+        expense_by_options = ["All"] + sorted(expense_df["Expense By"].dropna().unique().tolist())
+        selected_expense_by = st.sidebar.selectbox("Expense By", expense_by_options)
     
-        # Monthly manual expenses
-        monthly_manual_expense = expense_df.groupby("Month-Year", as_index=False)['Amount Used'].sum()
-        st.bar_chart(monthly_manual_expense.set_index("Month-Year"))
+        # ─────────────────────────────────────────────────────
+        # 🔹 Apply Filter
+        if selected_expense_by == "All":
+            filtered_df = expense_df.copy()
+        else:
+            filtered_df = expense_df[expense_df["Expense By"] == selected_expense_by]
     
-        with st.expander("🔍 View Bank Expense Transactions"):
-            bank_expense_df = bank_df[bank_df['Transaction Type'] == 'Expence_Debit'][['Date', 'Transaction By', 'Amount', 'Reason']]
-            st.dataframe(bank_expense_df.sort_values(by="Date", ascending=False))
+        # ─────────────────────────────────────────────────────
+        # 🔹 Month-on-Month Summary (Last 12 Months)
+        st.subheader("📊 Month-on-Month Expense (Last 12 Months)")
     
-        st.markdown("---")
+        recent_12_months = (
+            expense_df["YearMonth"]
+            .dropna()
+            .sort_values()
+            .unique()
+        )[-12:]
     
-        # ───────────────────────────────────────────────────────────────
-        # 🔹 Section 3: Detailed Manual Expense Entries
-        st.subheader("📋 Detailed Manual Expense Entries")
-        st.dataframe(expense_df.sort_values(by="Date", ascending=False))
+        momo_df = (
+            filtered_df[filtered_df["YearMonth"].isin(recent_12_months)]
+            .groupby(["YearMonth", "Expense By"])["Amount Used"]
+            .sum()
+            .reset_index()
+            .sort_values(by="YearMonth")
+        )
     
+        pivot_df = momo_df.pivot(index="YearMonth", columns="Expense By", values="Amount Used").fillna(0)
     
-#-----------------------------------------------------
+        st.bar_chart(pivot_df)
+
+        # 🔹 Total of Filtered Data
+        total_filtered_expense = filtered_df["Amount Used"].sum()
+        st.metric("📌 Total Filtered Expense", f"₹{total_filtered_expense:,.2f}")
+
+    
+        # ─────────────────────────────────────────────────────
+        # 🔹 View Filtered Table
+        st.subheader("📋 Filtered Expense Table")
+        st.dataframe(filtered_df.sort_values(by="Date", ascending=False))
+
 
     
     elif page == "Investment":
         st.title("📈 Investment Details")
-
+    
         # Add Investment Button (Top Right)
         col1, col2 = st.columns([6, 1])
         with col2:
@@ -587,7 +659,7 @@ else:
             investor_totals = pie_df.groupby("Investor Name", as_index=False)["Investment Amount"].sum()
     
             if not investor_totals.empty:
-                fig1, ax1 = plt.subplots(figsize=(3.5, 3.5))  # Smaller pie
+                fig1, ax1 = plt.subplots(figsize=(3.5, 3.5))
                 ax1.pie(
                     investor_totals["Investment Amount"],
                     labels=investor_totals["Investor Name"],
@@ -613,9 +685,43 @@ else:
     
         st.markdown("---")
     
-        # --- Detailed View ---
-        st.subheader("📋 All Investment Records")
-        st.dataframe(full_investment_df.sort_values(by="Date", ascending=False))
+        # --- 🎯 Investor Filter + Summary ---
+        st.markdown("### 🔎 Filter Investment Records by Investor")
+    
+        # Unique investor names
+        investors_list = full_investment_df["Investor Name"].dropna().unique().tolist()
+        investors_list.sort()
+        investors_list.insert(0, "All")
+    
+        selected_investor = st.selectbox("Select Investor", investors_list)
+    
+        # Filter data
+        if selected_investor != "All":
+            filtered_df = full_investment_df[full_investment_df["Investor Name"] == selected_investor]
+        else:
+            filtered_df = full_investment_df
+    
+        # --- 💼 Total Investment by Each Investor ---
+        st.markdown("#### 💼 Total Investment by Each Investor")
+    
+        summary_by_investor = full_investment_df.groupby("Investor Name")["Investment Amount"].sum().reset_index()
+        summary_by_investor.columns = ["Investor Name", "Total Investment (₹)"]
+        summary_by_investor["Total Investment (₹)"] = summary_by_investor["Total Investment (₹)"].apply(lambda x: f"₹{x:,.2f}")
+    
+        st.dataframe(summary_by_investor)
+        st.markdown("---")
+    
+        # --- 📋 Final Investment Table ---
+        if "Date" in filtered_df.columns:
+            filtered_df["Date"] = pd.to_datetime(filtered_df["Date"], dayfirst=True, errors="coerce")
+            filtered_df = filtered_df.dropna(subset=["Date"])
+            filtered_df = filtered_df.sort_values(by="Date", ascending=False)
+    
+            st.subheader("📋 All Investment Records")
+            st.dataframe(filtered_df)
+        else:
+            st.warning("⚠️ 'Date' column not found in investment data.")
+
 
     
     elif page == "Collection Data":
@@ -673,10 +779,46 @@ else:
     
         st.markdown("### 📈 Collection Trend")
     
-        # Line chart for all vehicles
+        # Line chart with time range filter
         chart_df = df.groupby(["Collection Date", "Vehicle No"])["Amount"].sum().reset_index()
-        chart_pivot = chart_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
-        st.line_chart(chart_pivot)
+        chart_df["Collection Date"] = pd.to_datetime(chart_df["Collection Date"])
+        
+        
+        # === RADIO BUTTONS CENTERED BELOW CHART WITHOUT LABEL ===
+        col1, col2, col3 = st.columns([1, 3, 1])
+        with col2:
+            range_option = st.radio(
+                "",  # Remove label
+                ["1 Week", "1 Month", "3 Months", "6 Months", "1 Year", "3 Years", "5 Years", "Max"],
+                horizontal=True,
+            )
+        
+        # === FILTER BASED ON SELECTION ===
+        today = pd.to_datetime("today")
+        if range_option == "1 Week":
+            start_date = today - pd.Timedelta(weeks=1)
+        elif range_option == "1 Month":
+            start_date = today - pd.DateOffset(months=1)
+        elif range_option == "3 Months":
+            start_date = today - pd.DateOffset(months=3)
+        elif range_option == "6 Months":
+            start_date = today - pd.DateOffset(months=6)
+        elif range_option == "1 Year":
+            start_date = today - pd.DateOffset(years=1)
+        elif range_option == "3 Years":
+            start_date = today - pd.DateOffset(years=3)
+        elif range_option == "5 Years":
+            start_date = today - pd.DateOffset(years=5)
+        else:
+            start_date = chart_df["Collection Date"].min()
+        
+        # Apply the filter
+        filtered_chart_df = chart_df[chart_df["Collection Date"] >= start_date]
+        filtered_pivot = filtered_chart_df.pivot(index="Collection Date", columns="Vehicle No", values="Amount").fillna(0)
+        
+        # Rerender chart with filtered data
+        st.line_chart(filtered_pivot)
+
     
         st.markdown("### 📄 Collection Records")
     
@@ -725,7 +867,7 @@ else:
 
     elif page == "Bank Transaction":
         st.title("🏦 Bank Transactions")
-
+    
         # Add Transaction Button (Top Right)
         col1, col2 = st.columns([6, 1])
         with col2:
@@ -735,7 +877,6 @@ else:
                 f'</a>',
                 unsafe_allow_html=True
             )
-
     
         # Ensure 'Date' is datetime
         bank_df["Date"] = pd.to_datetime(bank_df["Date"], dayfirst=True)
@@ -807,6 +948,11 @@ else:
     
         display_df["Formatted Amount"] = filtered_df.apply(format_amount, axis=1)
     
+        # ✅ Make Bill column clickable if it has a URL
+        display_df["Bill"] = display_df["Bill"].apply(
+            lambda x: f'<a href="{x}" target="_blank">View Bill</a>' if pd.notna(x) and str(x).startswith("http") else ""
+        )
+    
         def color_amount(val):
             if isinstance(val, str):
                 if val.startswith("+"):
@@ -817,7 +963,25 @@ else:
     
         styled = display_df[["Date", "Transaction By", "Transaction Type", "Reason", "Formatted Amount", "Bill"]].sort_values(by="Date", ascending=False)
         styled_df = styled.style.applymap(color_amount, subset=["Formatted Amount"])
-        st.dataframe(styled_df, use_container_width=True)
+    
+        # 💡 Full Width Styling for Table
+        st.markdown(
+            """
+            <style>
+                .full-width-table {
+                    width: 100%;
+                    overflow-x: auto;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+    
+        # ✅ Render styled DataFrame with clickable links and full width
+        st.markdown(
+            f'<div class="full-width-table">{styled_df.to_html(escape=False, index=False)}</div>',
+            unsafe_allow_html=True
+        )
     
         # ⬇️ Export Filtered Data
         st.download_button(
