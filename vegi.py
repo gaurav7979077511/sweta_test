@@ -682,7 +682,8 @@ else:
         # Format currency and distance
         styled_df = styled_df.format({
         "Amount": "₹{:,.0f}",
-        "Distance": "{:,.0f}"
+        "Distance": "{:,.0f}",
+        "Previous Amount": "{:,.0f}"
     })
 
     
