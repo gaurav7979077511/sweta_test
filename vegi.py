@@ -290,7 +290,7 @@ else:
     page = st.sidebar.radio("Go to:", ["Dashboard", "Monthly Summary", "Grouped Data", "Expenses", "Investment", "Collection Data", "Bank Transaction" ])
 
     if page == "Dashboard":
-        st.title("📊 Orga Yatra Dashboard")
+        st.title("📊 VayuVolt Dashboard")
         
         # Get latest month
         last_month = df['Month-Year'].max()
@@ -589,11 +589,21 @@ else:
         total_filtered_expense = filtered_df["Amount Used"].sum()
         st.metric("📌 Total Filtered Expense", f"₹{total_filtered_expense:,.2f}")
 
+
+        # ✅ Make 'Any Bill' column clickable if it has a URL
+        filtered_df["Any Bill"] = filtered_df["Any Bill"].apply(
+            lambda x: f'<a href="{x}" target="_blank">View Bill</a>' if pd.notna(x) and str(x).startswith("http") else ""
+        )
+
     
         # ─────────────────────────────────────────────────────
-        # 🔹 View Filtered Table
+        # 🔹 View Filtered Table with Clickable Links
         st.subheader("📋 Filtered Expense Table")
-        st.dataframe(filtered_df.sort_values(by="Date", ascending=False))
+        st.markdown(
+            filtered_df.sort_values(by="Date", ascending=False).to_html(escape=False, index=False),
+            unsafe_allow_html=True
+        )
+
 
 
     
