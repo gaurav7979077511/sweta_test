@@ -1314,7 +1314,8 @@ else:
         )
     elif page == "Loss Matrix":
         perf_df = df.copy()
-        # Convert datatypes safely
+
+        # ✅ Keep your existing functionality
         perf_df["Collection Date"] = pd.to_datetime(perf_df["Collection Date"], errors="coerce")
         perf_df = perf_df.dropna(subset=["Collection Date"])
         perf_df["Amount"] = pd.to_numeric(perf_df["Amount"], errors="coerce").fillna(0)
@@ -1322,13 +1323,40 @@ else:
         # Subtract 300 and flip sign
         perf_df["Amount"] = (perf_df["Amount"] - 300) * -1
 
-         # Show processed data in Streamlit
+        # ✅ New: Handle multiple vehicles for same driver and date
+        perf_df = perf_df.sort_values(by=["Collection Date", "Name", "Vehicle No"])
+        updated_rows = []
+
+        grouped = perf_df.groupby(["Collection Date", "Name"], group_keys=False)
+
+        for (date, driver), group in grouped:
+            if driver != "Zero Collection" and len(group) > 1:
+                total_amt = group["Amount"].sum()
+
+                # First vehicle loss
+                first_loss = (total_amt - 300) * -1
+                second_loss = 300 - first_loss
+
+                # Assign values
+                first_row = group.iloc[0].copy()
+                second_row = group.iloc[1].copy()
+
+                first_row["Amount"] = first_loss
+                second_row["Amount"] = second_loss
+                second_row["Name"] = "Zero Collection"
+
+                updated_rows.extend([first_row, second_row])
+            else:
+                updated_rows.extend(group.to_dict("records"))
+
+        perf_df = pd.DataFrame(updated_rows)
+
+        # ✅ Show processed data in Streamlit
         st.title("📉 Loss Matrix")
         st.dataframe(
             perf_df.sort_values(by="Collection Date", ascending=False),
             use_container_width=True
         )
-
 
     
     # 🔁 Refresh button
