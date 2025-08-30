@@ -293,7 +293,7 @@ else:
 
     # --- DASHBOARD UI ---
     st.sidebar.header("📂 Navigation")
-    page = st.sidebar.radio("Go to:", ["Dashboard", "Monthly Summary", "Grouped Data", "Expenses", "Investment", "Collection Data", "Bank Transaction" ])
+    page = st.sidebar.radio("Go to:", ["Dashboard", "Monthly Summary", "Grouped Data", "Expenses", "Investment", "Collection Data", "Bank Transaction","Loss Matrix" ])
 
     if page == "Dashboard":
         st.title("📊 VayuVolt Dashboard")
@@ -1312,6 +1312,23 @@ else:
             file_name="filtered_bank_transactions.csv",
             mime="text/csv"
         )
+    elif page == "Loss Matrix":
+        perf_df = df.copy()
+        # Convert datatypes safely
+        perf_df["Collection Date"] = pd.to_datetime(perf_df["Collection Date"], errors="coerce")
+        perf_df = perf_df.dropna(subset=["Collection Date"])
+        perf_df["Amount"] = pd.to_numeric(perf_df["Amount"], errors="coerce").fillna(0)
+
+        # Subtract 300 and flip sign
+        perf_df["Amount"] = (perf_df["Amount"] - 300) * -1
+
+         # Show processed data in Streamlit
+        st.title("📉 Loss Matrix")
+        st.dataframe(
+            perf_df.sort_values(by="Collection Date", ascending=False),
+            use_container_width=True
+        )
+
 
     
     # 🔁 Refresh button
