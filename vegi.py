@@ -596,25 +596,26 @@ else:
             background: linear-gradient(135deg, #ff512f, #dd2476);
             color: white !important;
             padding: 12px 20px;
-            font-size: 16px;          /* ✅ slightly bigger */
-            font-weight: 700;         /* ✅ bolder for vehicle no */
+            font-size: 16px;          /* ✅ vehicle number bigger */
+            font-weight: 700;
             border: none;
             border-radius: 12px;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
             text-decoration: none !important;
-            display: flex;            /* ✅ use flexbox */
-            flex-direction: column;   /* ✅ stack text */
-            justify-content: center;  /* ✅ center vehicle text */
-            align-items: center;      /* ✅ horizontal center */
-            position: relative;       /* ✅ for absolute date */
+            display: flex;            /* ✅ flexbox for stacking */
+            flex-direction: column;   /* ✅ stack vertically */
+            align-items: center;      /* ✅ center horizontally */
+            justify-content: center;  /* ✅ center vertically */
+        }
+        .vehicle-no {
+            font-size: 16px;
+            font-weight: 700;
         }
         .missing-date {
-            position: absolute;   /* ✅ floats inside button */
-            top: 4px;
-            right: 8px;
-            font-size: 10px;      /* ✅ very small */
+            margin-top: 4px;
+            font-size: 12px;      /* ✅ smaller */
             font-weight: 400;
             color: #f0f0f0;       /* ✅ light white/grey */
         }
@@ -641,8 +642,8 @@ else:
 
                 buttons_html += f"""
         <a href="{form_link}" target="_blank" class="custom-btn">
+            <span class="vehicle-no">{row['Vehicle No']}</span>
             <span class="missing-date">{row['Missing Date']}</span>
-            {row['Vehicle No']}
         </a>
         """
 
