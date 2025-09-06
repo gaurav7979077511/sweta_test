@@ -582,6 +582,7 @@ else:
             st.write("### 🔍 Recent Collection Data:")
             st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
         else:
+            st.subheader("🕒 Pending Collection Data")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
 
             # Start building HTML for all buttons
@@ -651,8 +652,7 @@ else:
 
             # Render all buttons at once
             st.markdown(buttons_html, unsafe_allow_html=True)
-            st.subheader("🕒 Pending Collection Data")
-            st.dataframe(missing_df, hide_index=True)
+            
 
 
 
