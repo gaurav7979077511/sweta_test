@@ -596,18 +596,21 @@ else:
                 background: linear-gradient(135deg, #ff512f, #dd2476);
                 color: white !important;
                 padding: 12px 20px;
-                font-size: 14px;
-                font-weight: 600;
+                font-size: 16px;          /* ✅ slightly bigger */
+                font-weight: 700;         /* ✅ bolder for vehicle no */
                 border: none;
                 border-radius: 12px;
                 cursor: pointer;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.2);
                 transition: all 0.3s ease;
                 text-decoration: none !important;
-                display: inline-block;
-                text-align: center;
-                position: relative;   /* ✅ added */
+                display: flex;            /* ✅ changed from inline-block */
+                flex-direction: column;   /* ✅ stack text */
+                justify-content: center;  /* ✅ keep vehicle centered */
+                align-items: center;      /* ✅ keep horizontal center */
+                position: relative;       /* ✅ keep for date */
             }
+
             .missing-date {
                 position: absolute;   /* ✅ makes it float inside button */
                 top: 4px;
