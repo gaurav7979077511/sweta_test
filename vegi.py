@@ -594,7 +594,7 @@ else:
             }
             .custom-btn {
                 background: linear-gradient(135deg, #ff512f, #dd2476);
-                color: white !important;
+                color: white;
                 padding: 12px 20px;
                 font-size: 14px;
                 font-weight: 600;
@@ -603,35 +603,20 @@ else:
                 cursor: pointer;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.2);
                 transition: all 0.3s ease;
-                text-decoration: none !important;
+                text-decoration: none;
                 display: inline-block;
                 text-align: center;
-                min-width: 120px;
             }
             .custom-btn:hover {
                 transform: translateY(-3px);
                 box-shadow: 0 6px 10px rgba(0,0,0,0.3);
                 background: linear-gradient(135deg, #dd2476, #ff512f);
             }
-            .vehicle-no {
-                font-size: 16px;
-                font-weight: 700;
-                color: white;
-                text-decoration: none;
-                display: block;
-            }
-            .missing-date {
-                font-size: 12px;
-                font-weight: 400;
-                color: white;
-                margin-top: 4px;
-                display: block;
-            }
             </style>
             <div class="button-container">
             """
 
-            # Add each button
+            # Add each button to the HTML string
             for _, row in missing_df.iterrows():
                 form_link = (
                     f"{form_base}"
@@ -643,16 +628,11 @@ else:
                     f"&entry.1925700467={quote('Govind Kumar')}"
                 )
 
-                buttons_html += f"""
-                <a href="{form_link}" target="_blank" class="custom-btn">
-                    <span class="vehicle-no">{row['Vehicle No']}</span>
-                    <span class="missing-date">{row['Missing Date']}</span>
-                </a>
-                """
+                buttons_html += f'<a href="{form_link}" target="_blank" class="custom-btn">{row["Vehicle No"]}</a>'
 
             buttons_html += "</div>"
 
-            # ✅ Render full HTML block in one call
+            # Render all buttons at once
             st.markdown(buttons_html, unsafe_allow_html=True)
             st.subheader("🕒 Pending Collection Data")
             st.dataframe(missing_df, hide_index=True)
