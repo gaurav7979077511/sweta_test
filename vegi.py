@@ -595,36 +595,52 @@ else:
             st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
         else:
             st.subheader("🕒 Pending Collection Data")
-            #missing_df.index = missing_df.index +1
 
-            # Google Form base link
-            form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
-
+            # Build table rows
+            rows_html = []
             for _, row in missing_df.iterrows():
-                # build dynamic prefilled link
                 form_link = (
-                f"{form_base}"
-                f"&entry.1817078140={quote(str(row['Missing Date']))}"
-                f"&entry.424776091={quote(str(row['Vehicle No']))}"
-                f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"   # fixed here
-                f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
-                f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
-                f"&entry.1925700467={quote('Govind Kumar')}"
+                    f"https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
+                    f"&entry.1817078140={quote(str(row['Missing Date']))}"
+                    f"&entry.424776091={quote(str(row['Vehicle No']))}"
+                    f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"
+                    f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
+                    f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
+                    f"&entry.1925700467={quote('Govind Kumar')}"
                 )
+                
+                # Red button for Vehicle No
+                button_html = f'<a href="{form_link}" target="_blank"><button style="background-color:#f44336;color:white;border:none;padding:6px 12px;border-radius:5px;">{row["Vehicle No"]}</button></a>'
+                
+                rows_html.append(f"""
+                    <tr>
+                        <td>{row['Missing Date']}</td>
+                        <td>{button_html}</td>
+                        <td>{row['Last Meter Reading']}</td>
+                        <td>{row['Last Assigned Name']}</td>
+                        <td>{row['Last Collected Amount']}</td>
+                        <td>{row['Last Collection date']}</td>
+                        <td>{row['Zero Collection from(Days)']}</td>
+                    </tr>
+                """)
 
+            # Full HTML table
+            table_html = f"""
+            <table style="width:100%;border-collapse:collapse;text-align:center;">
+                <tr style="background-color:#2b2b2b;color:white;">
+                    <th>Missing Date</th>
+                    <th>Vehicle No</th>
+                    <th>Last Meter Reading</th>
+                    <th>Last Assigned Name</th>
+                    <th>Last Collected Amount</th>
+                    <th>Last Collection date</th>
+                    <th>Zero Collection from (Days)</th>
+                </tr>
+                {''.join(rows_html)}
+            </table>
+            """
 
-                # button
-                st.markdown(
-                    f"""
-                    <a href="{form_link}" target="_blank">
-                        <button style="background-color:#4CAF50;color:white;padding:6px 12px;
-                        border:none;border-radius:5px;cursor:pointer;">
-                            🚗 {row['Vehicle No']}
-                        </button>
-                    </a>
-                    """,
-                    unsafe_allow_html=True
-                )
+            st.markdown(table_html, unsafe_allow_html=True)
 
         ## changes by ayush end here ##############################
 
