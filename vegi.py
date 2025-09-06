@@ -8,6 +8,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import date, time, datetime, timedelta
 import pytz
+from urllib.parse import quote
+
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Google Sheets Dashboard", layout="wide")
@@ -501,7 +503,7 @@ else:
         tz = pytz.timezone("Asia/Kolkata")
         now = datetime.now(tz)
         latest_date = date.today()
-        yesterday = latest_date - timedelta(days=0)
+        yesterday = latest_date - timedelta(days=1)
         cur_hour = now.hour
         # If current time is after 4 PM, include today in the date range, else only till yesterday
         if cur_hour >= 16:
@@ -594,7 +596,34 @@ else:
         else:
             st.subheader("🕒 Pending Collection Data")
             #missing_df.index = missing_df.index +1
-            st.dataframe(missing_df, hide_index=True)
+
+            # Google Form base link
+            form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
+
+            for _, row in missing_df.iterrows():
+                # build dynamic prefilled link
+                form_link = (
+                    f"{form_base}"
+                    f"&entry.1817078140={quote(str(row['Missing Date']))}"
+                    f"&entry.424776091={quote(str(row['Vehicle No']))}"
+                    f"&entry.1100483606={quote(str(row['Last Collection Amount']))}"
+                    f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
+                    f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
+                    f"&entry.1925700467={quote('Govind Kumar')}"  # fixed name if needed
+                )
+
+                # button
+                st.markdown(
+                    f"""
+                    <a href="{form_link}" target="_blank">
+                        <button style="background-color:#4CAF50;color:white;padding:6px 12px;
+                        border:none;border-radius:5px;cursor:pointer;">
+                            🚗 {row['Vehicle No']}
+                        </button>
+                    </a>
+                    """,
+                    unsafe_allow_html=True
+                )
 
         ## changes by ayush end here ##############################
 
