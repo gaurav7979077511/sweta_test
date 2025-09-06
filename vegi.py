@@ -631,7 +631,7 @@ else:
             <div class="button-container">
             """
 
-            # Add each button to the HTML string
+            # Add each button
             for _, row in missing_df.iterrows():
                 form_link = (
                     f"{form_base}"
@@ -652,7 +652,7 @@ else:
 
             buttons_html += "</div>"
 
-            # Render all buttons at once
+            # ✅ Render full HTML block in one call
             st.markdown(buttons_html, unsafe_allow_html=True)
             st.subheader("🕒 Pending Collection Data")
             st.dataframe(missing_df, hide_index=True)
