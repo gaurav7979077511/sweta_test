@@ -448,7 +448,7 @@ else:
                 "",
                 ["1 Week", "1 Month", "3 Months", "6 Months", "1 Year", "3 Years", "5 Years", "Max"],
                 horizontal=True,
-                index =7
+                index =2
             )
         
         # Determine the date range based on selection
@@ -501,7 +501,7 @@ else:
         tz = pytz.timezone("Asia/Kolkata")
         now = datetime.now(tz)
         latest_date = date.today()
-        yesterday = latest_date - timedelta(days=1)
+        yesterday = latest_date - timedelta(days=0)
         cur_hour = now.hour
         # If current time is after 4 PM, include today in the date range, else only till yesterday
         if cur_hour >= 16:
@@ -1127,7 +1127,7 @@ else:
                 "",  # Remove label
                 ["1 Week", "1 Month", "3 Months", "6 Months", "1 Year", "3 Years", "5 Years", "Max"],
                 horizontal=True,
-                index=7
+                index=2
             )
         
         # === FILTER BASED ON SELECTION ===
