@@ -609,8 +609,8 @@ else:
                     f"&entry.1925700467={quote('Govind Kumar')}"
                 )
                 
-                # Red button for Vehicle No
-                button_html = f'<a href="{form_link}" target="_blank"><button style="background-color:#f44336;color:white;border:none;padding:6px 12px;border-radius:5px;">{row["Vehicle No"]}</button></a>'
+                # red button for Vehicle No
+                button_html = f'<a href="{form_link}" target="_blank"><button style="background-color:#f44336;color:white;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;">{row["Vehicle No"]}</button></a>'
                 
                 rows_html.append(f"""
                     <tr>
@@ -624,19 +624,23 @@ else:
                     </tr>
                 """)
 
-            # Full HTML table
+            # Full HTML table with header
             table_html = f"""
             <table style="width:100%;border-collapse:collapse;text-align:center;">
-                <tr style="background-color:#2b2b2b;color:white;">
-                    <th>Missing Date</th>
-                    <th>Vehicle No</th>
-                    <th>Last Meter Reading</th>
-                    <th>Last Assigned Name</th>
-                    <th>Last Collected Amount</th>
-                    <th>Last Collection date</th>
-                    <th>Zero Collection from (Days)</th>
-                </tr>
-                {''.join(rows_html)}
+                <thead style="background-color:#2b2b2b;color:white;">
+                    <tr>
+                        <th>Missing Date</th>
+                        <th>Vehicle No</th>
+                        <th>Last Meter Reading</th>
+                        <th>Last Assigned Name</th>
+                        <th>Last Collected Amount</th>
+                        <th>Last Collection date</th>
+                        <th>Zero Collection from (Days)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join(rows_html)}
+                </tbody>
             </table>
             """
 
