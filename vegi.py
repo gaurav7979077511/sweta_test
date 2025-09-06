@@ -582,36 +582,66 @@ else:
             st.write("### 🔍 Recent Collection Data:")
             st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
         else:
-            #missing_df.index = missing_df.index +1
-
-            # Google Form base link
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
 
+            st.subheader("🕒 Pending Collection Data")
+
+            # Container with flexbox for horizontal layout
+            st.markdown(
+                """
+                <style>
+                .button-container {
+                    display: flex;
+                    flex-wrap: wrap; /* allows wrapping to next line if many */
+                    gap: 12px;       /* space between buttons */
+                }
+                .custom-btn {
+                    background: linear-gradient(135deg, #ff512f, #dd2476);
+                    color: white;
+                    padding: 12px 20px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    border: none;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+                    transition: all 0.3s ease;
+                    text-decoration: none;
+                    display: inline-block;
+                }
+                .custom-btn:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+                    background: linear-gradient(135deg, #dd2476, #ff512f);
+                }
+                </style>
+                <div class="button-container">
+                """,
+                unsafe_allow_html=True
+            )
+
+            # Generate all buttons inside container
             for _, row in missing_df.iterrows():
-                # build dynamic prefilled link
                 form_link = (
-                f"{form_base}"
-                f"&entry.1817078140={quote(str(row['Missing Date']))}"
-                f"&entry.424776091={quote(str(row['Vehicle No']))}"
-                f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"  
-                f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
-                f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
-                f"&entry.1925700467={quote('Govind Kumar')}"
+                    f"{form_base}"
+                    f"&entry.1817078140={quote(str(row['Missing Date']))}"
+                    f"&entry.424776091={quote(str(row['Vehicle No']))}"
+                    f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"  
+                    f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
+                    f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
+                    f"&entry.1925700467={quote('Govind Kumar')}"
                 )
 
-
-                # button
                 st.markdown(
                     f"""
-                    <a href="{form_link}" target="_blank">
-                        <button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">
-                             {row['Vehicle No']}
-                        </button>
-                    </a>
+                    <a href="{form_link}" target="_blank" class="custom-btn">{row['Vehicle No']}</a>
                     """,
                     unsafe_allow_html=True
                 )
-            st.subheader("🕒 Pending Collection Data")
+
+            # Close container
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
         ## changes by ayush end here ##############################
 
