@@ -579,9 +579,9 @@ else:
         # Display pending collection data        
         
         if missing_df.empty:
+            st.write("### 🔍 Recent Collection Data:")
             st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
         else:
-            st.subheader("🕒 Pending Collection Data")
             #missing_df.index = missing_df.index +1
 
             # Google Form base link
@@ -611,8 +611,7 @@ else:
                     """,
                     unsafe_allow_html=True
                 )
-
-            st.write("### 🔍 Recent Collection Data:")
+            st.subheader("🕒 Pending Collection Data")
 
         ## changes by ayush end here ##############################
 
