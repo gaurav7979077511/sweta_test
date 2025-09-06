@@ -576,22 +576,9 @@ else:
         missing_df = pd.DataFrame(missing_entries)
 
 
-        # Raise Collection Button
-        google_form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=header"
-                
-        col1, col2 = st.columns([6, 1])
-        with col2:
-            st.markdown(
-                f'<a href="https://forms.gle/ZyvCBLFaPC1szPGd7" target="_blank">'
-                f'<button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">➕ Add Collection</button>'
-                f'</a>',
-                unsafe_allow_html=True
-            )
-
         # Display pending collection data        
         
         if missing_df.empty:
-            st.write("### 🔍 Recent Collection Data:")
             st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
         else:
             st.subheader("🕒 Pending Collection Data")
@@ -624,6 +611,8 @@ else:
                     """,
                     unsafe_allow_html=True
                 )
+
+                st.write("### 🔍 Recent Collection Data:")
 
         ## changes by ayush end here ##############################
 
