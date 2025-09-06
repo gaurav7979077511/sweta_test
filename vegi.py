@@ -603,14 +603,15 @@ else:
             for _, row in missing_df.iterrows():
                 # build dynamic prefilled link
                 form_link = (
-                    f"{form_base}"
-                    f"&entry.1817078140={quote(str(row['Missing Date']))}"
-                    f"&entry.424776091={quote(str(row['Vehicle No']))}"
-                    f"&entry.1100483606={quote(str(row['Last Collection Amount']))}"
-                    f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
-                    f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
-                    f"&entry.1925700467={quote('Govind Kumar')}"  # fixed name if needed
+                f"{form_base}"
+                f"&entry.1817078140={quote(str(row['Missing Date']))}"
+                f"&entry.424776091={quote(str(row['Vehicle No']))}"
+                f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"   # fixed here
+                f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
+                f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
+                f"&entry.1925700467={quote('Govind Kumar')}"
                 )
+
 
                 # button
                 st.markdown(
