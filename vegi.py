@@ -594,7 +594,7 @@ else:
             }
             .custom-btn {
                 background: linear-gradient(135deg, #ff512f, #dd2476);
-                color: white;
+                color: white !important;  
                 padding: 12px 20px;
                 font-size: 14px;
                 font-weight: 600;
@@ -603,7 +603,7 @@ else:
                 cursor: pointer;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.2);
                 transition: all 0.3s ease;
-                text-decoration: none;
+                text-decoration: none !important;  
                 display: inline-block;
                 text-align: center;
             }
