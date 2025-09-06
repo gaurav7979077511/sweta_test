@@ -584,11 +584,8 @@ else:
         else:
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
 
-            # Wrap all buttons in a flex container
-            st.markdown(
-                '<div style="display:flex; flex-wrap: wrap; gap: 8px;">',
-                unsafe_allow_html=True
-            )
+            # Start flex container
+            buttons_html = '<div style="display:flex; flex-wrap: wrap; gap: 8px;">'
 
             for _, row in missing_df.iterrows():
                 form_link = (
@@ -601,21 +598,20 @@ else:
                     f"&entry.1925700467={quote('Govind Kumar')}"
                 )
 
-                # Inline button
-                st.markdown(
-                    f"""
-                    <a href="{form_link}" target="_blank" style="text-decoration:none;">
-                        <button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px; display:inline-block;">
-                            {row['Vehicle No']}
-                        </button>
-                    </a>
-                    """,
-                    unsafe_allow_html=True
-                )
+                # Add button HTML to the container
+                buttons_html += f"""
+                <a href="{form_link}" target="_blank" style="text-decoration:none;">
+                    <button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px; display:inline-block;">
+                        {row['Vehicle No']}
+                    </button>
+                </a>
+                """
 
             # Close flex container
-            st.markdown('</div>', unsafe_allow_html=True)
+            buttons_html += '</div>'
 
+            # Render all buttons in one markdown
+            st.markdown(buttons_html, unsafe_allow_html=True)
             st.subheader("🕒 Pending Collection Data")
 
         ## changes by ayush end here ##############################
