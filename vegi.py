@@ -606,7 +606,7 @@ else:
                 f"{form_base}"
                 f"&entry.1817078140={quote(str(row['Missing Date']))}"
                 f"&entry.424776091={quote(str(row['Vehicle No']))}"
-                f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"   # fixed here
+                f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"  
                 f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
                 f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
                 f"&entry.1925700467={quote('Govind Kumar')}"
@@ -617,9 +617,8 @@ else:
                 st.markdown(
                     f"""
                     <a href="{form_link}" target="_blank">
-                        <button style="background-color:#4CAF50;color:white;padding:6px 12px;
-                        border:none;border-radius:5px;cursor:pointer;">
-                            🚗 {row['Vehicle No']}
+                        <button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">
+                             {row['Vehicle No']}
                         </button>
                     </a>
                     """,
