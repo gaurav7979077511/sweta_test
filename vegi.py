@@ -612,7 +612,7 @@ else:
                     unsafe_allow_html=True
                 )
 
-                st.write("### 🔍 Recent Collection Data:")
+            st.write("### 🔍 Recent Collection Data:")
 
         ## changes by ayush end here ##############################
 
