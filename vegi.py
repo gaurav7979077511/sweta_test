@@ -582,35 +582,40 @@ else:
             st.write("### 🔍 Recent Collection Data:")
             st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
         else:
-            #missing_df.index = missing_df.index +1
-
-            # Google Form base link
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
 
+            # Wrap all buttons in a flex container
+            st.markdown(
+                '<div style="display:flex; flex-wrap: wrap; gap: 8px;">',
+                unsafe_allow_html=True
+            )
+
             for _, row in missing_df.iterrows():
-                # build dynamic prefilled link
                 form_link = (
-                f"{form_base}"
-                f"&entry.1817078140={quote(str(row['Missing Date']))}"
-                f"&entry.424776091={quote(str(row['Vehicle No']))}"
-                f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"  
-                f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
-                f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
-                f"&entry.1925700467={quote('Govind Kumar')}"
+                    f"{form_base}"
+                    f"&entry.1817078140={quote(str(row['Missing Date']))}"
+                    f"&entry.424776091={quote(str(row['Vehicle No']))}"
+                    f"&entry.1100483606={quote(str(row['Last Collected Amount']))}"  
+                    f"&entry.1947342081={quote(str(row['Last Meter Reading']))}"
+                    f"&entry.1812763042={quote(str(row['Last Assigned Name']))}"
+                    f"&entry.1925700467={quote('Govind Kumar')}"
                 )
 
-
-                # button
+                # Inline button
                 st.markdown(
                     f"""
-                    <a href="{form_link}" target="_blank">
-                        <button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">
-                             {row['Vehicle No']}
+                    <a href="{form_link}" target="_blank" style="text-decoration:none;">
+                        <button style="background-color:#f44336; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px; display:inline-block;">
+                            {row['Vehicle No']}
                         </button>
                     </a>
                     """,
                     unsafe_allow_html=True
                 )
+
+            # Close flex container
+            st.markdown('</div>', unsafe_allow_html=True)
+
             st.subheader("🕒 Pending Collection Data")
 
         ## changes by ayush end here ##############################
