@@ -586,41 +586,39 @@ else:
 
             st.subheader("🕒 Pending Collection Data")
 
-            # Container with flexbox for horizontal layout
-            st.markdown(
-                """
-                <style>
-                .button-container {
-                    display: flex;
-                    flex-wrap: wrap; /* allows wrapping to next line if many */
-                    gap: 12px;       /* space between buttons */
-                }
-                .custom-btn {
-                    background: linear-gradient(135deg, #ff512f, #dd2476);
-                    color: white;
-                    padding: 12px 20px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    border: none;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-                    transition: all 0.3s ease;
-                    text-decoration: none;
-                    display: inline-block;
-                }
-                .custom-btn:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-                    background: linear-gradient(135deg, #dd2476, #ff512f);
-                }
-                </style>
-                <div class="button-container">
-                """,
-                unsafe_allow_html=True
-            )
+            # Start building HTML for all buttons
+            buttons_html = """
+            <style>
+            .button-container {
+                display: flex;
+                flex-wrap: wrap; /* wrap into next line if too many */
+                gap: 12px;       /* spacing between buttons */
+            }
+            .custom-btn {
+                background: linear-gradient(135deg, #ff512f, #dd2476);
+                color: white;
+                padding: 12px 20px;
+                font-size: 14px;
+                font-weight: 600;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+                text-align: center;
+            }
+            .custom-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+                background: linear-gradient(135deg, #dd2476, #ff512f);
+            }
+            </style>
+            <div class="button-container">
+            """
 
-            # Generate all buttons inside container
+            # Add each button to the HTML string
             for _, row in missing_df.iterrows():
                 form_link = (
                     f"{form_base}"
@@ -632,16 +630,12 @@ else:
                     f"&entry.1925700467={quote('Govind Kumar')}"
                 )
 
-                st.markdown(
-                    f"""
-                    <a href="{form_link}" target="_blank" class="custom-btn">{row['Vehicle No']}</a>
-                    """,
-                    unsafe_allow_html=True
-                )
+                buttons_html += f'<a href="{form_link}" target="_blank" class="custom-btn">{row["Vehicle No"]}</a>'
 
-            # Close container
-            st.markdown("</div>", unsafe_allow_html=True)
+            buttons_html += "</div>"
 
+            # Render all buttons at once
+            st.markdown(buttons_html, unsafe_allow_html=True)
 
         ## changes by ayush end here ##############################
 
