@@ -618,7 +618,7 @@ else:
             margin-top: 4px;
             font-size: 12px;      /* ✅ smaller */
             font-weight: 400;
-            color: #f0f0f0;       /* ✅ light white/grey */
+            color: #000000;       /* ✅ light white/grey */
         }
         .custom-btn:hover {
             transform: translateY(-3px);
