@@ -586,48 +586,46 @@ else:
 
             # Start building HTML for all buttons
             buttons_html = """
-            <style>
-            .button-container {
-                display: flex;
-                flex-wrap: wrap; /* wrap into next line if too many */
-                gap: 12px;       /* spacing between buttons */
-            }
-            .custom-btn {
-                background: linear-gradient(135deg, #ff512f, #dd2476);
-                color: white !important;
-                padding: 12px 20px;
-                font-size: 16px;          /* ✅ slightly bigger */
-                font-weight: 700;         /* ✅ bolder for vehicle no */
-                border: none;
-                border-radius: 12px;
-                cursor: pointer;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-                transition: all 0.3s ease;
-                text-decoration: none !important;
-                display: flex;            /* ✅ changed from inline-block */
-                flex-direction: column;   /* ✅ stack text */
-                justify-content: center;  /* ✅ keep vehicle centered */
-                align-items: center;      /* ✅ keep horizontal center */
-                position: relative;       /* ✅ keep for date */
-            }
-
-            .missing-date {
-                position: absolute;   /* ✅ makes it float inside button */
-                top: 4px;
-                right: 8px;
-                font-size: 10px;      /* ✅ very small */
-                font-weight: 400;
-                color: #f0f0f0;       /* ✅ light white/grey */
-            }
-
-            .custom-btn:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-                background: linear-gradient(135deg, #dd2476, #ff512f);
-            }
-            </style>
-            <div class="button-container">
-            """
+        <style>
+        .button-container {
+            display: flex;
+            flex-wrap: wrap; /* wrap into next line if too many */
+            gap: 12px;       /* spacing between buttons */
+        }
+        .custom-btn {
+            background: linear-gradient(135deg, #ff512f, #dd2476);
+            color: white !important;
+            padding: 12px 20px;
+            font-size: 16px;          /* ✅ slightly bigger */
+            font-weight: 700;         /* ✅ bolder for vehicle no */
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: flex;            /* ✅ use flexbox */
+            flex-direction: column;   /* ✅ stack text */
+            justify-content: center;  /* ✅ center vehicle text */
+            align-items: center;      /* ✅ horizontal center */
+            position: relative;       /* ✅ for absolute date */
+        }
+        .missing-date {
+            position: absolute;   /* ✅ floats inside button */
+            top: 4px;
+            right: 8px;
+            font-size: 10px;      /* ✅ very small */
+            font-weight: 400;
+            color: #f0f0f0;       /* ✅ light white/grey */
+        }
+        .custom-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #dd2476, #ff512f);
+        }
+        </style>
+        <div class="button-container">
+        """
 
             # Add each button to the HTML string
             for _, row in missing_df.iterrows():
@@ -642,12 +640,11 @@ else:
                 )
 
                 buttons_html += f"""
-                <a href="{form_link}" target="_blank" class="custom-btn">
-                    <span class="missing-date">{row['Missing Date']}</span>
-                    {row['Vehicle No']}
-                </a>
-                """
-
+        <a href="{form_link}" target="_blank" class="custom-btn">
+            <span class="missing-date">{row['Missing Date']}</span>
+            {row['Vehicle No']}
+        </a>
+        """
 
             buttons_html += "</div>"
 
@@ -655,6 +652,7 @@ else:
             st.markdown(buttons_html, unsafe_allow_html=True)
             st.subheader("🕒 Pending Collection Data")
             st.dataframe(missing_df, hide_index=True)
+
 
 
         ## changes by ayush end here ##############################
