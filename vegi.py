@@ -638,7 +638,13 @@ else:
                     f"&entry.1925700467={quote('Govind Kumar')}"
                 )
 
-                buttons_html += f'<a href="{form_link}" target="_blank" class="custom-btn">{row["Vehicle No"]}</a>'
+                buttons_html += f"""
+                <a href="{form_link}" target="_blank" class="custom-btn">
+                    <span class="missing-date">{row['Missing Date']}</span>
+                    {row['Vehicle No']}
+                </a>
+                """
+
 
             buttons_html += "</div>"
 
