@@ -908,7 +908,7 @@ else:
         grouped_df = grouped_df.sort_values(by="Amount", ascending=False)
     
         # Display Data
-        st.subheader(f"📊 Top {top_n} - Grouped by {group_by}")
+        st.subheader(f"📊 Grouped by {group_by}")
         st.dataframe(grouped_df.style.format({
             "Amount": "₹{:.0f}",
             "Distance": "{:.0f} km",
