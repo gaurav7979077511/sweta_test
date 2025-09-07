@@ -11,123 +11,49 @@ import pytz
 from urllib.parse import quote
 
 
-# HTML + CSS to make cards aligned horizontally with no scroll bar
-html_content = """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
-.card-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: flex-start;
-    align-items: flex-start;
-}
-.card {
-    background: linear-gradient(135deg, #2a9d8f, #264653);
-    border-radius: 12px;
-    padding: 12px;
-    color: #000000;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    width: 160px;
-    height: 95px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    font-family: 'Poppins', sans-serif;
-    position: relative;
-    overflow: hidden;
-}
-.card::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    width: 30px;
-    height: 30px;
-    background: #ffffff30;
-    border-radius: 50%;
-    transform: scale(0);
-    transition: transform 0.4s ease;
-}
-.card:hover::before {
-    transform: scale(20);
-}
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
-}
-.vehicle-no {
-    font-size: 1.1em;
-    font-weight: 600;
-    color: #FFFFFF;
-    margin-bottom: 5px;
-    z-index: 1;
-}
-.date {
-    font-size: 0.7em;
-    opacity: 1;
-    z-index: 1;
-    font-weight: 600;
-}
-.card-body {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    z-index: 1;
-}
-.info-left, .info-right {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.8em;
-}
-.info-value {
-    font-weight: 600;
-}
-.info-value.name {
-    text-align: right;
-}
-.button-container {
-    display: flex;
-    flex-wrap: wrap; /* wrap into next line if too many */
-    gap: 12px;      /* spacing between buttons */
-}
-.custom-btn {
-    background: linear-gradient(135deg, #ff512f, #dd2476);
-    color: white !important;
-    padding: 12px 20px;
-    font-size: 16px;      /* ✅ vehicle number bigger */
-    font-weight: 700;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    text-decoration: none !important;
-    display: flex;          /* ✅ flexbox for stacking */
-    flex-direction: column;  /* ✅ stack vertically */
-    align-items: center;      /* ✅ center horizontally */
-    justify-content: center;  /* ✅ center vertically */
-}
-.vehicle-no {
-    font-size: 16px;
-    font-weight: 700;
-}
-.missing-date {
-    margin-top: 4px;
-    font-size: 12px;    /* ✅ smaller */
-    font-weight: 400;
-    color: #000000;      /* ✅ light white/grey */
-}
-.custom-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-    background: linear-gradient(135deg, #dd2476, #ff512f);
-}
-</style>
-
-<div class="card-container">
-"""
+# Start building HTML for all buttons
+buttons_html = """
+        <style>
+        .button-container {
+            display: flex;
+            flex-wrap: wrap; /* wrap into next line if too many */
+            gap: 12px;       /* spacing between buttons */
+        }
+        .custom-btn {
+            background: linear-gradient(135deg, #ff512f, #dd2476);
+            color: white !important;
+            padding: 12px 20px;
+            font-size: 16px;          /* ✅ vehicle number bigger */
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: flex;            /* ✅ flexbox for stacking */
+            flex-direction: column;   /* ✅ stack vertically */
+            align-items: center;      /* ✅ center horizontally */
+            justify-content: center;  /* ✅ center vertically */
+        }
+        .vehicle-no {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .missing-date {
+            margin-top: 4px;
+            font-size: 12px;      /* ✅ smaller */
+            font-weight: 400;
+            color: #000000;       /* ✅ light white/grey */
+        }
+        .custom-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #dd2476, #ff512f);
+        }
+        </style>
+        <div class="button-container">
+        """
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Google Sheets Dashboard", layout="wide")
