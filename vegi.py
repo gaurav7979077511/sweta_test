@@ -706,7 +706,7 @@ else:
         
         if not missing_df.empty:
             st.write("### 🔍 Recent Collection:")
-            Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(6)
+            Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(10)
             for index, row in Recent_Collection.iterrows():
                 html_content += f"""
                 <div class="card">
