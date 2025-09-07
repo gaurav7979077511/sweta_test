@@ -887,7 +887,6 @@ else:
         selected_month = st.sidebar.selectbox("📅 Select Month-Year:", ["All"] + sorted(df['Month-Year'].unique(), reverse=True))
     
         chart_type = st.sidebar.radio("📈 Show Chart For:", ["Amount", "Distance", "Both"])
-        top_n = st.sidebar.slider("🔢 Show Top N Groups", min_value=3, max_value=20, value=10)
     
         # Filter by month
         df_filtered = df.copy()
@@ -906,7 +905,7 @@ else:
         grouped_df["Avg Distance"] = grouped_df["Distance"] / grouped_df["Total Collections"]
     
         # Sort and get top N
-        grouped_df = grouped_df.sort_values(by="Amount", ascending=False).head(top_n)
+        grouped_df = grouped_df.sort_values(by="Amount", ascending=False)
     
         # Display Data
         st.subheader(f"📊 Top {top_n} - Grouped by {group_by}")
