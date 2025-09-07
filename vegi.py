@@ -15,6 +15,7 @@ import streamlit.components.v1 as components
 html_content = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
 .card-container {
     display: flex;
     flex-wrap: wrap;
@@ -23,13 +24,13 @@ html_content = """
     align-items: flex-start;
 }
 .card {
-    background: linear-gradient(135deg, #2a9d8f, #264653);
+    background: linear-gradient(135deg, #2a9d8f, #264653); /* New background color */
     border-radius: 12px;
     padding: 12px;
-    color: #000000;
+    color: #ffffff; /* Adjusted text color for the new background */
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    width: 160px;
-    height: 95px;
+    width: 160px; /* New width */
+    height: 95px; /* New height */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -57,29 +58,41 @@ html_content = """
     transform: translateY(-4px);
     box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
 }
+
 .vehicle-no {
     font-size: 1.1em;
     font-weight: 600;
-    color: #FFFFFF;
     margin-bottom: 5px;
     z-index: 1;
 }
-.date {
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    z-index: 1;
+}
+
+.date, .meter-reading-header {
     font-size: 0.7em;
+    font-weight: 600;
     opacity: 1;
     z-index: 1;
-    font-weight: 600;
 }
-.card-body {
+
+.info-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    z-index: 1;
+    margin-top: auto; /* Pushes this section to the bottom */
 }
+
 .info-left, .info-right {
     display: flex;
     flex-direction: column;
-    font-size: 0.8em;
+    font-size: 0.75em;
+    z-index: 1;
 }
 .info-value {
     font-weight: 600;
