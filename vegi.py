@@ -743,7 +743,7 @@ else:
 
         # Display pending collection data        
         
-        if not missing_df.empty:
+        if missing_df.empty:
             st.write("### 🔍 Recent Collection:")
             Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(14)
             Recent_Collection["Collection Date"] = pd.to_datetime(Recent_Collection["Collection Date"])
