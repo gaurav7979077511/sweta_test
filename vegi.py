@@ -12,6 +12,23 @@ from urllib.parse import quote
 import streamlit.components.v1 as components
 
 
+
+
+
+# Function to get the background color based on amount
+def get_background_style(amount):
+    if amount == 0:
+        return "linear-gradient(135deg, #9b2226, #b8332d);" # Dark red for a loss
+    elif 1 <= amount <= 299:
+        return "linear-gradient(135deg, #1d3557, #457b9d);" # Cool blue for "good"
+    elif amount == 300:
+        return "linear-gradient(135deg, #f77f00, #fcbf49);" # Vibrant orange for target met
+    elif amount > 300:
+        return "linear-gradient(135deg, #008000, #4c9e29);" # Bold green for exceeding expectations
+    return "linear-gradient(135deg, #1d3557, #457b9d);" # Default if none match
+
+
+# HTML + CSS for both sets of cards
 html_content = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
@@ -24,12 +41,11 @@ html_content = """
     align-items: flex-start;
 }
 .card {
-    background: linear-gradient(135deg, #2a9d8f, #264653); /* New background color */
     border-radius: 12px;
     padding: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    width: 160px; /* New width */
-    height: 95px; /* New height */
+    width: 160px;
+    height: 120px; /* Increased height to fit content better */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -63,8 +79,8 @@ html_content = """
     font-weight: 600;
     margin-bottom: 5px;
     z-index: 1;
-    color: #ffffff; /* Vehicle number remains white */
-    text-align: center; /* Center the vehicle number */
+    color: #ffffff;
+    text-align: center;
 }
 
 /* Explicitly set color to black for all other text elements */
@@ -96,7 +112,7 @@ html_content = """
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-top: auto; /* Pushes this section to the bottom */
+    margin-top: auto;
 }
 
 .info-left, .info-right {
@@ -734,12 +750,15 @@ else:
             Recent_Collection["Collection Date"] = pd.to_datetime(Recent_Collection["Collection Date"])
             Recent_Collection["Collection Date"] = Recent_Collection["Collection Date"].dt.strftime("%d %b %Y")
             for _, row in Recent_Collection.iterrows():
-                # Note: Recent_Collection does not have a "Meter Reading" column, so we exclude it.
+                bg_style = get_background_style(row['Amount'])
+                        
                 html_content += f"""
-                    <div class="card">
+                    <div class="card" style="background: {bg_style}">
                         <div class="vehicle-no">{row['Vehicle No']}</div>
+                        <hr style="border-top: 2px solid #000; margin-top: 5px; margin-bottom: 5px;">
                         <div class="card-header">
                             <div class="date">{row['Collection Date']}</div>
+                            <div class="meter-reading-header">{row['Meter Reading']} Km</div>
                         </div>
                         <div class="info-row">
                             <div class="info-left">
@@ -1385,16 +1404,19 @@ else:
         Daily_Collection["Collection Date"] = Daily_Collection["Collection Date"].dt.strftime("%d %b %Y")
 
         for index, row in Daily_Collection.iterrows():
+            bg_style = get_background_style(row['Amount'])
+            
             html_content += f"""
-            <div class="card">
+            <div class="card" style="background: {bg_style}">
                 <div class="vehicle-no">{row['Vehicle No']}</div>
+                <hr style="border-top: 2px solid #000; margin-top: 5px; margin-bottom: 5px;">
                 <div class="card-header">
                     <div class="date">{row['Collection Date']}</div>
                     <div class="meter-reading-header">{row['Meter Reading']} Km</div>
                 </div>
                 <div class="info-row">
                     <div class="info-left">
-                        <div class="info-value" >₹ {row['Amount']}</div>
+                        <div class="info-value">₹ {row['Amount']}</div>
                         <div class="info-value">{row['Distance']} km</div>
                     </div>
                     <div class="info-right">
