@@ -881,7 +881,7 @@ else:
 
 
     elif page == "Grouped Data":
-        st.title("🔍 Grouped Collection Data")
+        st.title("🔍 Grouped Collection Data.")
     
         group_by = st.sidebar.radio("🔄 Group Data By:", ["Name", "Vehicle No"])
         selected_month = st.sidebar.selectbox("📅 Select Month-Year:", ["All"] + sorted(df['Month-Year'].unique(), reverse=True))
