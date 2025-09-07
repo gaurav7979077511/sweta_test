@@ -1374,6 +1374,8 @@ else:
         df["Distance"] = df["Distance"].round(2)
 
         Daily_Collection=filtered_df.copy()
+        Daily_Collection["Collection Date"] = pd.to_datetime(Daily_Collection["Collection Date"])
+        Daily_Collection["Collection Date"] = Daily_Collection["Collection Date"].dt.strftime("%d %b %Y")
         for index, row in Daily_Collection.iterrows():
             html_content += f"""
             <div class="card">
