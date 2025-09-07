@@ -730,29 +730,30 @@ else:
         if not missing_df.empty:
             st.write("### 🔍 Recent Collection:")
             Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(12)
-            for index, row in Recent_Collection.iterrows():
+            for _, row in Recent_Collection.iterrows():
+                # Note: Recent_Collection does not have a "Meter Reading" column, so we exclude it.
                 html_content += f"""
-                <div class="card">
-                    <div>
+                    <div class="card">
                         <div class="vehicle-no">{row['Vehicle No']}</div>
-                        <div class="date">{row['Collection Date']}</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="info-left">
-                            <div class="info-value">₹ {row['Amount']}</div>
-                            <div class="info-value">{row['Distance']} km</div>
+                        <div class="card-header">
+                            <div class="date">{row['Collection Date']}</div>
                         </div>
-                        <div class="info-right">
-                            <div class="info-value name">{row['Name']}</div>
+                        <div class="info-row">
+                            <div class="info-left">
+                                <div class="info-value">₹ {row['Amount']}</div>
+                                <div class="info-value">{row['Distance']} km</div>
+                            </div>
+                            <div class="info-right">
+                                <div class="info-value name">{row['Name']}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
                 """
 
             html_content += "</div>"
 
-            # Render HTML with large enough height to avoid internal scrolling
-            components.html(html_content, height=5000, scrolling=False)
+            # Render HTML
+            components.html(html_content, height=600, scrolling=False)
         else:
             st.subheader("🕒 Pending Collection:")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
