@@ -64,6 +64,7 @@ html_content = """
     margin-bottom: 5px;
     z-index: 1;
     color: #ffffff; /* Vehicle number remains white */
+    text-align: center; /* Center the vehicle number */
 }
 
 /* Explicitly set color to black for all other text elements */
@@ -753,7 +754,7 @@ else:
             html_content += "</div>"
 
             # Render HTML
-            components.html(html_content, height=600, scrolling=False)
+            components.html(html_content, height=600, scrolling=True)
         else:
             st.subheader("🕒 Pending Collection:")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
