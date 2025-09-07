@@ -9,6 +9,88 @@ from google.oauth2.service_account import Credentials
 from datetime import date, time, datetime, timedelta
 import pytz
 from urllib.parse import quote
+import streamlit.components.v1 as components
+
+
+html_content = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+.card {
+    background: linear-gradient(135deg, #2a9d8f, #264653);
+    border-radius: 12px;
+    padding: 12px;
+    color: #000000;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    width: 160px;
+    height: 95px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 30px;
+    height: 30px;
+    background: #ffffff30;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.4s ease;
+}
+.card:hover::before {
+    transform: scale(20);
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+}
+.vehicle-no {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 5px;
+    z-index: 1;
+}
+.date {
+    font-size: 0.7em;
+    opacity: 1;
+    z-index: 1;
+    font-weight: 600;
+}
+.card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 1;
+}
+.info-left, .info-right {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8em;
+}
+.info-value {
+    font-weight: 600;
+}
+.info-value.name {
+    text-align: right;
+}
+</style>
+
+<div class="card-container">
+"""
 
 
 # Start building HTML for all buttons
@@ -622,34 +704,32 @@ else:
 
         # Display pending collection data        
         
-        if missing_df.empty:
+        if not missing_df.empty:
             st.write("### 🔍 Recent Collection:")
             Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(6)
             for index, row in Recent_Collection.iterrows():
-                with st.container():
-                    st.markdown("---")  # Separator between cards
-                    # Create columns for layout
-                    col1, col2, col3, col4, col5 = st.columns([2, 2, 1.5, 1.5, 2])
+                html_content += f"""
+                <div class="card">
+                    <div>
+                        <div class="vehicle-no">{row['Vehicle No']}</div>
+                        <div class="date">{row['Collection Date']}</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-left">
+                            <div class="info-value">₹ {row['Amount']}</div>
+                            <div class="info-value">{row['Distance']} km</div>
+                        </div>
+                        <div class="info-right">
+                            <div class="info-value name">{row['Name']}</div>
+                        </div>
+                    </div>
+                </div>
+                """
 
-                    with col1:
-                        st.subheader("📅 Date")
-                        st.write(row["Collection Date"])
+            html_content += "</div>"
 
-                    with col2:
-                        st.subheader("🚗 Vehicle No")
-                        st.write(row["Vehicle No"])
-
-                    with col3:
-                        st.subheader("💰 Amount")
-                        st.write(f"₹ {row['Amount']}")
-
-                    with col4:
-                        st.subheader("📏 Distance (km)")
-                        st.write(row["Distance"])
-
-                    with col5:
-                        st.subheader("👤 Name")
-                        st.write(row["Name"])
+            # Render HTML with large enough height to avoid internal scrolling
+            components.html(html_content, height=5000, scrolling=False)
         else:
             st.subheader("🕒 Pending Collection:")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
