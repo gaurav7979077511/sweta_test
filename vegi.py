@@ -11,6 +11,50 @@ import pytz
 from urllib.parse import quote
 
 
+# Start building HTML for all buttons
+buttons_html = """
+        <style>
+        .button-container {
+            display: flex;
+            flex-wrap: wrap; /* wrap into next line if too many */
+            gap: 12px;       /* spacing between buttons */
+        }
+        .custom-btn {
+            background: linear-gradient(135deg, #ff512f, #dd2476);
+            color: white !important;
+            padding: 12px 20px;
+            font-size: 16px;          /* ✅ vehicle number bigger */
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: flex;            /* ✅ flexbox for stacking */
+            flex-direction: column;   /* ✅ stack vertically */
+            align-items: center;      /* ✅ center horizontally */
+            justify-content: center;  /* ✅ center vertically */
+        }
+        .vehicle-no {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .missing-date {
+            margin-top: 4px;
+            font-size: 12px;      /* ✅ smaller */
+            font-weight: 400;
+            color: #000000;       /* ✅ light white/grey */
+        }
+        .custom-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #dd2476, #ff512f);
+        }
+        </style>
+        <div class="button-container">
+        """
+
 # Streamlit App Configuration
 st.set_page_config(page_title="Google Sheets Dashboard", layout="wide")
 
@@ -585,49 +629,7 @@ else:
             st.subheader("🕒 Pending Collection Data")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
 
-            # Start building HTML for all buttons
-            buttons_html = """
-        <style>
-        .button-container {
-            display: flex;
-            flex-wrap: wrap; /* wrap into next line if too many */
-            gap: 12px;       /* spacing between buttons */
-        }
-        .custom-btn {
-            background: linear-gradient(135deg, #ff512f, #dd2476);
-            color: white !important;
-            padding: 12px 20px;
-            font-size: 16px;          /* ✅ vehicle number bigger */
-            font-weight: 700;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            text-decoration: none !important;
-            display: flex;            /* ✅ flexbox for stacking */
-            flex-direction: column;   /* ✅ stack vertically */
-            align-items: center;      /* ✅ center horizontally */
-            justify-content: center;  /* ✅ center vertically */
-        }
-        .vehicle-no {
-            font-size: 16px;
-            font-weight: 700;
-        }
-        .missing-date {
-            margin-top: 4px;
-            font-size: 12px;      /* ✅ smaller */
-            font-weight: 400;
-            color: #000000;       /* ✅ light white/grey */
-        }
-        .custom-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-            background: linear-gradient(135deg, #dd2476, #ff512f);
-        }
-        </style>
-        <div class="button-container">
-        """
+            
 
             # Add each button to the HTML string
             for _, row in missing_df.iterrows():
