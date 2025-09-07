@@ -756,7 +756,7 @@ else:
             html_content += "</div>"
 
             # Render HTML
-            components.html(html_content, height=400, scrolling=True)
+            components.html(html_content, height=300, scrolling=True)
         else:
             st.subheader("🕒 Pending Collection:")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
