@@ -1372,42 +1372,31 @@ else:
     
         # Round distance
         df["Distance"] = df["Distance"].round(2)
-    
-        # Styling
-        def highlight_amount(val, prev):
-            if pd.isna(prev):
-                return ""
-            elif val > prev:
-                return "color: green; font-weight: bold"
-            elif val < prev:
-                return "color: red; font-weight: bold"
-            else:
-                return ""
-    
-        def style_row(row):
-            return [
-                highlight_amount(row["Amount"], row["Previous Amount"]) if col == "Amount" else ""
-                for col in row.index
-            ]
-    
-        # Prepare merged dataframe with Previous Amount (needed for color logic)
-        merged_df = filtered_df.copy()
-        #styled_df = merged_df[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
-        styled_df = merged_df.sort_values("Collection Date", ascending=False)[display_cols + ["Previous Amount"]].style.apply(style_row, axis=1)
 
-    
-        # Format currency and distance
-        styled_df = styled_df.format({
-        "Amount": "₹{:,.0f}",
-        "Distance": "{:,.0f}",
-        "Previous Amount": "{:,.0f}"
-    })
+        Daily_Collection=filtered_df.copy()
+        for index, row in Daily_Collection.iterrows():
+            html_content += f"""
+            <div class="card">
+                <div class="vehicle-no">{row['Vehicle No']}</div>
+                <div class="card-header">
+                    <div class="date">{row['Collection Date']}</div>
+                    <div class="meter-reading-header">{row['Meter Reading']} Km</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-left">
+                        <div class="info-value" >₹ {row['Amount']}</div>
+                        <div class="info-value">{row['Distance']} km</div>
+                    </div>
+                    <div class="info-right">
+                        <div class="info-value name">{row['Name']}</div>
+                    </div>
+                </div>
+            </div>
+            """
+        html_content += "</div>"
 
-    
-        # Show styled dataframe
-        st.dataframe(styled_df, use_container_width=True)
-
-
+        # Render HTML
+        components.html(html_content, height=600, scrolling=True)
 
 
     elif page == "Bank Transaction":
