@@ -730,7 +730,9 @@ else:
         
         if not missing_df.empty:
             st.write("### 🔍 Recent Collection:")
-            Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(12)
+            Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(14)
+            Recent_Collection["Collection Date"] = pd.to_datetime(Recent_Collection["Collection Date"])
+            Recent_Collection["Collection Date"] = Recent_Collection["Collection Date"].dt.strftime("%d %b %Y")
             for _, row in Recent_Collection.iterrows():
                 # Note: Recent_Collection does not have a "Meter Reading" column, so we exclude it.
                 html_content += f"""
