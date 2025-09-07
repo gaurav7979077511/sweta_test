@@ -18,15 +18,14 @@ import streamlit.components.v1 as components
 # Function to get the background color based on amount
 def get_background_style(amount):
     if amount == 0:
-        return "linear-gradient(135deg, #9b2226, #b8332d);" # Dark red for a loss
+        return "linear-gradient(135deg, #4a0000, #800000);" # Very Bad
     elif 1 <= amount <= 299:
-        return "linear-gradient(135deg, #1d3557, #457b9d);" # Cool blue for "good"
+        return "linear-gradient(135deg, #00446b, #007b8b);" # Good
     elif amount == 300:
-        return "linear-gradient(135deg, #f77f00, #fcbf49);" # Vibrant orange for target met
+        return "linear-gradient(135deg, #a4e231, #54a600);" # Happy
     elif amount > 300:
-        return "linear-gradient(135deg, #008000, #4c9e29);" # Bold green for exceeding expectations
-    return "linear-gradient(135deg, #1d3557, #457b9d);" # Default if none match
-
+        return "linear-gradient(135deg, #f7c400, #009841);" # More Happy
+    return "linear-gradient(135deg, #00446b, #007b8b);" # Default if none match
 
 # HTML + CSS for both sets of cards
 html_content = """
