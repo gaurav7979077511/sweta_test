@@ -623,10 +623,35 @@ else:
         # Display pending collection data        
         
         if missing_df.empty:
-            st.write("### 🔍 Recent Collection Data:")
-            st.dataframe(df.sort_values(by="Collection Date", ascending=False).head(10))
+            st.write("### 🔍 Recent Collection:")
+            Recent_Collection = df.sort_values(by="Collection Date", ascending=False).head(6)
+            for index, row in Recent_Collection.iterrows():
+                with st.container():
+                    st.markdown("---")  # Separator between cards
+                    # Create columns for layout
+                    col1, col2, col3, col4, col5 = st.columns([2, 2, 1.5, 1.5, 2])
+
+                    with col1:
+                        st.subheader("📅 Date")
+                        st.write(row["Collection Date"])
+
+                    with col2:
+                        st.subheader("🚗 Vehicle No")
+                        st.write(row["Vehicle No"])
+
+                    with col3:
+                        st.subheader("💰 Amount")
+                        st.write(f"₹ {row['Amount']}")
+
+                    with col4:
+                        st.subheader("📏 Distance (km)")
+                        st.write(row["Distance"])
+
+                    with col5:
+                        st.subheader("👤 Name")
+                        st.write(row["Name"])
         else:
-            st.subheader("🕒 Pending Collection Data")
+            st.subheader("🕒 Pending Collection:")
             form_base = "https://docs.google.com/forms/d/e/1FAIpQLSdnNBpKKxpWVkrZfj0PLKW8K26-3i0bO43hBADOHvGcpGqjvA/viewform?usp=pp_url"
 
             
