@@ -1242,20 +1242,45 @@ else:
         # ===============================
         # 7️⃣ INVESTOR SUMMARY TABLE
         # ===============================
-        st.markdown("#### 💼 Net Investment by Investor")
+        st.markdown("#### 💼 Capital Summary by Investor")
 
-        summary_by_investor = (
-            full_investment_df
+        # ---- Capital Invested ----
+        capital_invested = (
+            full_investment_df[full_investment_df["Investment Amount"] > 0]
             .groupby("Investor Name")["Investment Amount"]
             .sum()
-            .reset_index()
+            .rename("Capital Invested")
         )
 
-        summary_by_investor["Investment Amount"] = summary_by_investor["Investment Amount"].apply(
-            lambda x: f"₹{x:,.0f}"
+        # ---- Capital Withdrawn (Debit) ----
+        capital_withdrawn = (
+            full_investment_df[full_investment_df["Investment Amount"] < 0]
+            .groupby("Investor Name")["Investment Amount"]
+            .sum()
+            .abs()
+            .rename("Capital Withdrawn")
         )
 
-        st.dataframe(summary_by_investor)
+        # ---- Combine ----
+        capital_summary_df = pd.concat(
+            [capital_invested, capital_withdrawn],
+            axis=1
+        ).fillna(0)
+
+        # ---- Net Capital ----
+        capital_summary_df["Net Capital"] = (
+            capital_summary_df["Capital Invested"]
+            - capital_summary_df["Capital Withdrawn"]
+        )
+
+        capital_summary_df = capital_summary_df.reset_index()
+
+        # ---- Formatting ----
+        for col in ["Capital Invested", "Capital Withdrawn", "Net Capital"]:
+            capital_summary_df[col] = capital_summary_df[col].apply(lambda x: f"₹{x:,.0f}")
+
+        st.dataframe(capital_summary_df)
+
         st.markdown("---")
 
         # ===============================
