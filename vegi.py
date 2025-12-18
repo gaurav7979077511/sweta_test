@@ -397,9 +397,10 @@ else:
     total_credits = Collection_Credit_Bank+Investment_Credit_Bank+Payment_Credit_Bank+settlement_credit
 
     Expence_Debit_Bank=bank_df[bank_df['Transaction Type'].isin(['Expence_Debit'])]['Amount'].sum()
+    Investment_Debit_Bank=bank_df[bank_df['Transaction Type'].isin(['Investment_Debit'])]['Amount'].sum()
     
     Settlement_Debit_Bank=bank_df[bank_df['Transaction Type'].isin(['Settlement_Debit'])]['Amount'].sum()
-    total_debits = Expence_Debit_Bank+Settlement_Debit_Bank
+    total_debits = Expence_Debit_Bank+Settlement_Debit_Bank+Investment_Debit_Bank
 
     bank_balance = total_credits - total_debits
 
@@ -413,6 +414,7 @@ else:
     govind_expense_debit = 0
     govind_settlement_debit = 0
     govind_total_debit = 0
+    govind_investment_debit = 0
 
     # For Kumar Gaurav
     gaurav_collection_credit = 0
@@ -422,6 +424,7 @@ else:
     gaurav_expense_debit = 0
     gaurav_settlement_debit = 0
     gaurav_total_debit = 0
+    gaurav_investment_debit = 0
 
     # Filter data by person and assign values
     govind_df = bank_df[bank_df['Transaction By'] == 'Govind Kumar']
@@ -435,7 +438,8 @@ else:
 
     govind_expense_debit = govind_df[govind_df['Transaction Type'] == 'Expence_Debit']['Amount'].sum()
     govind_settlement_debit = govind_df[govind_df['Transaction Type'] == 'Settlement_Debit']['Amount'].sum()
-    govind_total_debit = govind_expense_debit + govind_settlement_debit
+    govind_investment_debit = govind_df[govind_df['Transaction Type'] == 'Investment_Debit']['Amount'].sum()
+    govind_total_debit = govind_expense_debit + govind_settlement_debit+govind_investment_debit
 
     # Kumar Gaurav
     gaurav_collection_credit = gaurav_df[gaurav_df['Transaction Type'] == 'Collection_Credit']['Amount'].sum()
@@ -445,7 +449,8 @@ else:
 
     gaurav_expense_debit = gaurav_df[gaurav_df['Transaction Type'] == 'Expence_Debit']['Amount'].sum()
     gaurav_settlement_debit = gaurav_df[gaurav_df['Transaction Type'] == 'Settlement_Debit']['Amount'].sum()
-    gaurav_total_debit = gaurav_expense_debit + gaurav_settlement_debit
+    gaurav_investment_debit = gaurav_df[gaurav_df['Transaction Type'] == 'Investment_Debit']['Amount'].sum()
+    gaurav_total_debit = gaurav_expense_debit + gaurav_settlement_debit+gaurav_investment_debit
 
     #------------Bank Calculation End-----------------
 
@@ -561,7 +566,7 @@ else:
 
         # === Combined Totals ===
         total_collection = govind_total_collection + gaurav_total_collection
-        total_investment = govind_total_investment + gaurav_total_investment + Investment_Credit_Bank
+        total_investment = govind_total_investment + gaurav_total_investment + Investment_Credit_Bank-Investment_Debit_Bank
         total_expense = govind_total_expense + gaurav_total_expense + govind_expense_debit +gaurav_expense_debit
 
         remaining_fund_gaurav= (gaurav_total_collection - gaurav_total_expense - gaurav_collection_credit + gaurav_settlement_debit - gaurav_settlement_credit + gaurav_total_investment)
@@ -1081,10 +1086,10 @@ else:
 
 
 
-    
+    #----Investment
     elif page == "Investment":
         st.title("📈 Investment Details")
-    
+
         # Add Investment Button (Top Right)
         col1, col2 = st.columns([6, 1])
         with col2:
@@ -1094,118 +1099,177 @@ else:
                 f'</a>',
                 unsafe_allow_html=True
             )
-    
-        # --- 1. From Investment Sheet ---
+
+        # ===============================
+        # 1️⃣ MANUAL INVESTMENT SHEET
+        # ===============================
+        investment_df["Source"] = "Manual Sheet"
         sheet_total_investment = investment_df["Investment Amount"].sum()
-    
-        # --- 2. From Bank Transactions ---
-        bank_investment_df = bank_df[bank_df["Transaction Type"] == "Investment_Credit"].copy()
-    
-        # Rename for consistency
+
+        investment_df_clean = investment_df[
+            ["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]
+        ]
+
+        # ===============================
+        # 2️⃣ BANK INVESTMENT (CREDIT + DEBIT)
+        # ===============================
+        bank_investment_df = bank_df[
+            bank_df["Transaction Type"].isin(["Investment_Credit", "Investment_Debit"])
+        ].copy()
+
+        # Rename columns
         bank_investment_df.rename(columns={
             "Transaction By": "Investor Name",
             "Amount": "Investment Amount",
             "Reason": "Comment"
         }, inplace=True)
-    
-        # Add source
-        investment_df["Source"] = "Manual Sheet"
+
+        # ➕ Credit = +Amount | ➖ Debit = -Amount
+        bank_investment_df["Investment Amount"] = bank_investment_df.apply(
+            lambda x: x["Investment Amount"]
+            if x["Transaction Type"] == "Investment_Credit"
+            else -x["Investment Amount"],
+            axis=1
+        )
+
+        bank_investment_df["Investment Type"] = bank_investment_df["Transaction Type"].replace({
+            "Investment_Credit": "Bank Credit",
+            "Investment_Debit": "Bank Debit"
+        })
+
+        bank_investment_df["Month-Year"] = pd.to_datetime(
+            bank_investment_df["Date"], dayfirst=True, errors="coerce"
+        ).dt.strftime("%Y-%m")
+
         bank_investment_df["Source"] = "Bank Transaction"
-    
-        # Clean and align columns
-        investment_df_clean = investment_df[["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]]
-        bank_investment_df_clean = bank_investment_df[["Date", "Investor Name", "Investment Amount", "Comment", "Source"]]
-    
-        bank_investment_df_clean["Investment Type"] = "Bank Credit"
-        bank_investment_df_clean["Month-Year"] = pd.to_datetime(bank_investment_df_clean["Date"]).dt.strftime('%Y-%m')
-    
-        # Final order of bank data
-        bank_investment_df_clean = bank_investment_df_clean[["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]]
-    
-        # Combine both
-        full_investment_df = pd.concat([investment_df_clean, bank_investment_df_clean], ignore_index=True)
-    
-        # --- Total Summary ---
+
+        bank_investment_df_clean = bank_investment_df[
+            ["Date", "Investor Name", "Investment Amount", "Investment Type", "Comment", "Month-Year", "Source"]
+        ]
+
+        # ===============================
+        # 3️⃣ COMBINE ALL INVESTMENTS
+        # ===============================
+        full_investment_df = pd.concat(
+            [investment_df_clean, bank_investment_df_clean],
+            ignore_index=True
+        )
+
+        # ===============================
+        # 4️⃣ TOTAL SUMMARY
+        # ===============================
+        bank_net_investment = bank_investment_df_clean["Investment Amount"].sum()
         total_combined_investment = full_investment_df["Investment Amount"].sum()
-    
+
         col1, col2, col3 = st.columns(3)
         col1.metric("📄 From Sheet", f"₹{sheet_total_investment:,.0f}")
-        col2.metric("🏦 From Bank", f"₹{bank_investment_df['Investment Amount'].sum():,.0f}")
-        col3.metric("💰 Total Investment", f"₹{total_combined_investment:,.0f}")
-    
+        col2.metric("🏦 Bank Net (Credit - Debit)", f"₹{bank_net_investment:,.0f}")
+        col3.metric("💰 Total Net Investment", f"₹{total_combined_investment:,.0f}")
+
         st.markdown("---")
-    
-        # --- 📊 Split Charts in Equal Bordered Columns ---
+
+        # ===============================
+        # 5️⃣ CHARTS
+        # ===============================
         col1, col2 = st.columns(2)
-    
+
         with col1:
-            st.markdown("#### 👥 Investment Share (Govind vs Gaurav)")
-            pie_df = full_investment_df[full_investment_df["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])]
-            investor_totals = pie_df.groupby("Investor Name", as_index=False)["Investment Amount"].sum()
-    
+            st.markdown("#### 👥 Net Investment Share (Govind vs Gaurav)")
+            pie_df = full_investment_df[
+                full_investment_df["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])
+            ]
+
+            investor_totals = pie_df.groupby(
+                "Investor Name", as_index=False
+            )["Investment Amount"].sum()
+
+            investor_totals = investor_totals[investor_totals["Investment Amount"] > 0]
+
             if not investor_totals.empty:
                 fig1, ax1 = plt.subplots(figsize=(3.5, 3.5))
                 ax1.pie(
                     investor_totals["Investment Amount"],
                     labels=investor_totals["Investor Name"],
-                    autopct='%1.1f%%',
+                    autopct="%1.1f%%",
                     startangle=90,
                     colors=plt.cm.Pastel1.colors
                 )
                 ax1.axis("equal")
                 st.pyplot(fig1)
             else:
-                st.info("No investment data available for Govind or Gaurav.")
-    
+                st.info("No positive net investment available.")
+
         with col2:
-            st.markdown("#### 🧾 Manual vs Bank Investment by Investor")
-            manual_df = investment_df_clean[investment_df_clean["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])]
-            bank_df_investor = bank_investment_df_clean[bank_investment_df_clean["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])]
-    
-            manual_summary = manual_df.groupby("Investor Name")["Investment Amount"].sum().rename("Manual Sheet")
-            bank_summary = bank_df_investor.groupby("Investor Name")["Investment Amount"].sum().rename("Bank Transaction")
-    
-            comparison_df = pd.concat([manual_summary, bank_summary], axis=1).fillna(0)
+            st.markdown("#### 🧾 Manual vs Bank (Net) Investment")
+
+            manual_df = investment_df_clean[
+                investment_df_clean["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])
+            ]
+
+            bank_df_investor = bank_investment_df_clean[
+                bank_investment_df_clean["Investor Name"].isin(["Govind Kumar", "Kumar Gaurav"])
+            ]
+
+            manual_summary = manual_df.groupby("Investor Name")["Investment Amount"].sum()
+            bank_summary = bank_df_investor.groupby("Investor Name")["Investment Amount"].sum()
+
+            comparison_df = pd.concat(
+                [manual_summary.rename("Manual Sheet"),
+                bank_summary.rename("Bank (Net)")],
+                axis=1
+            ).fillna(0)
+
             st.bar_chart(comparison_df)
-    
+
         st.markdown("---")
-    
-        # --- 🎯 Investor Filter + Summary ---
-        st.sidebar.markdown("### 🔎 Filter Investment Records by Investor")
-    
-        # Unique investor names
-        investors_list = full_investment_df["Investor Name"].dropna().unique().tolist()
-        investors_list.sort()
+
+        # ===============================
+        # 6️⃣ SIDEBAR FILTER
+        # ===============================
+        st.sidebar.markdown("### 🔎 Filter Investment Records")
+
+        investors_list = sorted(full_investment_df["Investor Name"].dropna().unique().tolist())
         investors_list.insert(0, "All")
-    
+
         selected_investor = st.sidebar.selectbox("Select Investor", investors_list)
-    
-        # Filter data
-        if selected_investor != "All":
-            filtered_df = full_investment_df[full_investment_df["Investor Name"] == selected_investor]
-        else:
-            filtered_df = full_investment_df
-    
-        # --- 💼 Total Investment by Each Investor ---
-        st.markdown("#### 💼 Total Investment by Each Investor")
-    
-        summary_by_investor = full_investment_df.groupby("Investor Name")["Investment Amount"].sum().reset_index()
-        summary_by_investor.columns = ["Investor Name", "Total Investment (₹)"]
-        summary_by_investor["Total Investment (₹)"] = summary_by_investor["Total Investment (₹)"].apply(lambda x: f"₹{x:,.0f}")
-    
+
+        filtered_df = (
+            full_investment_df
+            if selected_investor == "All"
+            else full_investment_df[full_investment_df["Investor Name"] == selected_investor]
+        )
+
+        # ===============================
+        # 7️⃣ INVESTOR SUMMARY TABLE
+        # ===============================
+        st.markdown("#### 💼 Net Investment by Investor")
+
+        summary_by_investor = (
+            full_investment_df
+            .groupby("Investor Name")["Investment Amount"]
+            .sum()
+            .reset_index()
+        )
+
+        summary_by_investor["Investment Amount"] = summary_by_investor["Investment Amount"].apply(
+            lambda x: f"₹{x:,.0f}"
+        )
+
         st.dataframe(summary_by_investor)
         st.markdown("---")
-    
-        # --- 📋 Final Investment Table ---
-        if "Date" in filtered_df.columns:
-            filtered_df["Date"] = pd.to_datetime(filtered_df["Date"], dayfirst=True, errors="coerce")
-            filtered_df = filtered_df.dropna(subset=["Date"])
-            filtered_df = filtered_df.sort_values(by="Date", ascending=False)
-    
-            st.subheader("📋 All Investment Records")
-            st.dataframe(filtered_df)
-        else:
-            st.warning("⚠️ 'Date' column not found in investment data.")
+
+        # ===============================
+        # 8️⃣ FINAL TABLE
+        # ===============================
+        filtered_df["Date"] = pd.to_datetime(
+            filtered_df["Date"], dayfirst=True, errors="coerce"
+        )
+
+        filtered_df = filtered_df.dropna(subset=["Date"]).sort_values("Date", ascending=False)
+
+        st.subheader("📋 All Investment Records (Credit & Debit)")
+        st.dataframe(filtered_df)
+
 
 
     
